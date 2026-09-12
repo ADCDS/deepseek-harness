@@ -395,7 +395,7 @@ describe('ui-model-selection dual entry', () => {
     expect(() => b.seat().inject!(sid('ghost'))).toThrow(/resolved no scope/)
   })
 
-  it('withholds both model entries from addressed subagent sessions without Agent-bound RPCs', async () => {
+  it('withholds model SELECTION from addressed subagent sessions while still naming their route', async () => {
     const b = await bench()
     b.mint('child')
     b.address(sid('child'))
@@ -410,14 +410,16 @@ describe('ui-model-selection dual entry', () => {
     expect(face.available).toBe(false)
     face.load()
     await expect(face.select({ provider: 'deepseek', model: 'deepseek-v4-pro' })).resolves.toBe(false)
-    await expect(b.ctx.modelDirectories.directoryFor(sid('child')).load())
-      .rejects.toThrow(/unavailable for addressed subagent/)
+    // Reading the advisory catalog is display data and stays open, so the
+    // read-only seat can name the route the child already runs.
+    await expect(b.ctx.modelDirectories.directoryFor(sid('child')).load()).resolves.toBeDefined()
+    // Selection carries Session authority and stays refused.
     await expect(b.ctx.modelDirectories.directoryFor(sid('child')).select({
       provider: 'deepseek',
       model: 'deepseek-v4-pro',
     })).rejects.toThrow(/unavailable for addressed subagent/)
     b.ctx.emit('connection/reset')
     await Promise.resolve()
-    expect(b.calls).toEqual({ models: 2, select: 0 })
+    expect(b.calls.select).toBe(0)
   })
 })

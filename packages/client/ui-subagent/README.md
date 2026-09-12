@@ -29,11 +29,11 @@ The session header keeps the current session title as the lineage breadcrumb and
 
 ### Browsing the tree
 
-Rows display mode plus `running`/`inactive` activity and an optional log-backed title; the trailing column stacks total durable provider usage above active-turn duration. Keyboard navigation works with ArrowRight/ArrowLeft to expand and collapse branches and ArrowUp/ArrowDown, Home, End, and Escape to navigate or close the tree. An unlabeled one-shot row falls back to its session id; corrupt, unsupported, or unavailable rows remain readable but disabled.
+Rows stack up to three lines: the child's `provider/model` route on a line of its own between the label line and the optional log-backed title, mode, and `running`/`inactive` activity line; the trailing column stacks total durable provider usage above active-turn duration. Keyboard navigation works with ArrowRight/ArrowLeft to expand and collapse branches and ArrowUp/ArrowDown, Home, End, and Escape to navigate or close the tree. An unlabeled one-shot row falls back to its session id; corrupt, unsupported, or unavailable rows remain readable but disabled.
 
 ### Continuing a conversation
 
-A continuable child with a live parent keeps the ordinary input chrome: typing and Send stay available while the child runs because every follow-up joins the child's FIFO inbox, and an independent Stop routes through `subagents/interruptByParent`. A continuable child whose exact parent is unavailable and which is not running elects a read-only composer explaining the recovery path; while such a child still runs, the selector yields to the ordinary composer with input and Send disabled but its independent Stop usable.
+A continuable child with a live parent keeps the ordinary input chrome: typing and Send stay available while the child runs because every follow-up joins the child's FIFO inbox, and an independent Stop routes through `subagents/interruptByParent`. A continuable child whose exact parent is unavailable and which is not running elects a read-only composer explaining the recovery path; while such a child still runs, the selector yields to the ordinary composer with input and Send disabled but its independent Stop usable. Because that takeover replaces the resident composer and the composer's model seat with it, the read-only frame also reports the route the delegation fixed.
 
 ### The `@` reference source
 
@@ -57,9 +57,13 @@ The header lineage renderer reads `subagentsByParent` and session summaries thro
 
 Token totals sum the four disjoint `tokenUsage` buckets. Duration sums completed `subagentTiming` turns, advances once per second only for an open turn on a running child, and freezes after the child becomes inactive; an interrupted open turn is bounded by its same-cut `active.through`, never by newer session metadata.
 
+### Route
+
+The route is the child's own `modelSelection.lastUsed`, the provider and model its latest request header recorded, so an inherited route and an overridden one are both reported exactly. Rows print raw provider and model ids because the header lineage has no access to the model catalog that owns display names; the [route decision](../../../.agents/notes/implemented/feature/2026-09-12-subagent-route-visibility.md) records why.
+
 ### Composer election
 
-One-shot children always elect a read-only composer. A continuable child elects one only when its exact parent is unavailable and the child is not running; otherwise the ordinary composer's Session routes prompts through `subagents/prompt`. This package never receives host context or calls a model-facing tool.
+One-shot children always elect a read-only composer. A continuable child elects one only when its exact parent is unavailable and the child is not running; otherwise the ordinary composer's Session routes prompts through `subagents/prompt`. Both read-only cases carry the child's `provider/model` route from the `modelSelection` projection, because the takeover hides the composer's own model seat and the child's title is model-authored text rather than a route. This package never receives host context or calls a model-facing tool.
 
 </details>
 

@@ -68,6 +68,8 @@ Set `modelSelectionSettings: true` to sample the Host's `subagent-model-selectio
 
 A call supplies `provider` and `model` together, or supplies only an effort when configured, parent, or provider-owned defaults provide the route. Static `provider.agentRouteDefaults`, when present, form the provider/model baseline; tool configuration and model fields overlay it before route-aware effort merging and exact-route preflight. Providers without these defaults use compatible values from the parent's latest logged request, then the parent's creation options before its first request, while retaining the configured `maxTokens`. Changing the route without an explicit effort clears the inherited route-owned effort, so the selected model resolves its default. The live LLM adapter validates the effective route before child creation. Catalog membership remains advisory, so a model can use an unlisted id when its adapter accepts it.
 
+Every result carries that effective route — overridden or purely inherited — as an optional `route` field projected into the call's presentation metadata, so a UI can report which platform and model served the delegation. It is absent only when no layer supplies a complete route. No rendered result text changes; in PTC mode the field is part of the declared output schema the model reads.
+
 -----
 
 <a id="understand-the-implementation"></a>
@@ -133,7 +135,7 @@ The generated default [`subagent` schema](../../../docs/tool-catalog.md#deepseek
 
 #### Token effect
 
-Fixed schema cost per parent request; model selection adds three parameters. Each provider instance adds one schema, and each continuable instance adds one short system-prompt section.
+Fixed schema cost per parent request; model selection adds three parameters. Each provider instance adds one schema, and each continuable instance adds one short system-prompt section. In PTC mode the result schema carries an optional `route` object on each of its three arms, which the `ToolOutputMap` prefix renders once per instance.
 
 #### KV Cache effect
 

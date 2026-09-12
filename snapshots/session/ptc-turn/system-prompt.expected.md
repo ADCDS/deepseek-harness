@@ -447,24 +447,48 @@ interface ToolOutputMap {
   subagent: {
     kind: "background";
     jobId: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   } | {
     kind: "continuable";
     subagentId: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   } | {
     kind: "foreground";
     runId: string;
     output: JsonValue[];
+    route?: {
+      provider: string;
+      model: string;
+    };
   };
   subagent_fork: {
     kind: "background";
     jobId: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   } | {
     kind: "continuable";
     subagentId: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   } | {
     kind: "foreground";
     runId: string;
     output: JsonValue[];
+    route?: {
+      provider: string;
+      model: string;
+    };
   };
   todo_write: {
     todos: ({

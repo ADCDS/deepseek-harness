@@ -27,12 +27,15 @@ import type { SubagentProvider, SubagentResult, SubagentRun } from '@deepseek-ai
 import type { JobOutcome } from '@deepseek-ai/dsh-jobs'
 import {
   assertAllowedModelSelection,
+  effectiveChildRoute,
   hasConfiguredLlmSelection,
   hasDelegationModelRequest,
   preflightChildLlmRoute,
   requestedAgentOptions,
 } from './model-selection.ts'
-import type { DelegationModelRequest, ModelSelectionPolicy } from './model-selection.ts'
+import type {
+  AllowedModelRoute, DelegationModelRequest, ModelSelectionPolicy,
+} from './model-selection.ts'
 import { registerListSubagentModels } from './list-models.ts'
 import type {} from './model-selection-settings.ts'
 import {
@@ -198,13 +201,31 @@ type ForegroundToolResult = {
   readonly kind: 'foreground'
   readonly runId: SubagentRun['id']
   readonly output: JsonValue[]
+  readonly route?: AllowedModelRoute
 }
+
+/**
+ * The child's effective route, carried by every result arm. Optional because a
+ * composition without a complete parent route and without an override has none
+ * to report; `render` ignores it, so the model-facing text is unchanged.
+ */
+const ROUTE_OUTPUT_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    provider: { type: 'string', required: true },
+    model: { type: 'string', required: true },
+  },
+} as const
 
 /**
  * Collect and release one foreground run without letting disposal replace an
  * independent result failure.
  */
-async function settleForegroundRun(run: SubagentRun): Promise<ForegroundToolResult> {
+async function settleForegroundRun(
+  run: SubagentRun,
+  route: AllowedModelRoute | undefined,
+): Promise<ForegroundToolResult> {
   const [execution] = await Promise.allSettled([
     run.result.then((result): ForegroundToolResult => {
       const error = stopReasonError(result)
@@ -219,6 +240,7 @@ async function settleForegroundRun(run: SubagentRun): Promise<ForegroundToolResu
         // Content blocks already cross durable JSON boundaries elsewhere;
         // the registry performs the authoritative lossless snapshot here.
         output: result.output as unknown as JsonValue[],
+        ...route === undefined ? {} : { route },
       }
     }),
   ])
@@ -435,6 +457,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                 properties: {
                   kind: { type: 'string', required: true, const: 'background' },
                   jobId: { type: 'string', required: true },
+                  route: ROUTE_OUTPUT_SCHEMA,
                 },
               },
               {
@@ -443,6 +466,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                 properties: {
                   kind: { type: 'string', required: true, const: 'continuable' },
                   subagentId: { type: 'string', required: true },
+                  route: ROUTE_OUTPUT_SCHEMA,
                 },
               },
               {
@@ -452,6 +476,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                   kind: { type: 'string', required: true, const: 'foreground' },
                   runId: { type: 'string', required: true },
                   output: { type: 'array', required: true, items: { type: 'json' } },
+                  route: ROUTE_OUTPUT_SCHEMA,
                 },
               },
             ],
@@ -464,6 +489,12 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                 ? `started subagent ${value.subagentId}`
                 : outputValueText(value.output),
           }],
+          // The route stays out of `render`: the delegating model chose it and
+          // does not need it echoed, while a reader of the parent conversation
+          // cannot otherwise tell which platform served the child.
+          presentationMeta: (_args, value) => value.route === undefined
+            ? {}
+            : { route: { provider: value.route.provider, model: value.route.model } },
         },
         // Children never mutate the parent session; the one parent-owned write
         // (tasks.start) is a synchronous commutative insertion.
@@ -522,6 +553,9 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
             ...maxDepth !== undefined ? { maxDepth } : {},
           }
 
+          const childRoute = effectiveChildRoute(parentOptions, requestedChildAgentOptions)
+          const routeField = childRoute === undefined ? {} : { route: childRoute }
+
           const runSpec = resolveDelegationRun(args, { backgroundEnabled, continuable })
           if (runSpec.runInBackground) {
             if (continuable) {
@@ -533,7 +567,7 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                 request,
                 signal: exec.signal,
               })
-              return { kind: 'continuable' as const, subagentId: started.childId }
+              return { kind: 'continuable' as const, subagentId: started.childId, ...routeField }
             }
             const jobs = runtimeCtx.get('jobs')
             if (jobs === undefined) {
@@ -557,14 +591,14 @@ export function apply(ctx: Context, config: Config, session?: Session): void {
                 }
               },
             })
-            return { kind: 'background' as const, jobId: id }
+            return { kind: 'background' as const, jobId: id, ...routeField }
           }
 
           const run: SubagentRun = await runtimeCtx.subagents.start(config.provider, {
             ...request,
             signal: exec.signal,
           })
-          return settleForegroundRun(run)
+          return settleForegroundRun(run, childRoute)
         },
       }))
       mounted = { subagentProvider, disposeTool }

@@ -375,18 +375,33 @@ class SubagentArgs(TypedDict):
     run_in_background: NotRequired[bool]
     # Additional keys beyond those declared are allowed.
 
+class SubagentOutput1Route(TypedDict):
+    provider: str
+    model: str
+
 class SubagentOutput1(TypedDict):
     kind: Literal["background"]
     jobId: str
+    route: NotRequired[SubagentOutput1Route]
+
+class SubagentOutput2Route(TypedDict):
+    provider: str
+    model: str
 
 class SubagentOutput2(TypedDict):
     kind: Literal["continuable"]
     subagentId: str
+    route: NotRequired[SubagentOutput2Route]
+
+class SubagentOutput3Route(TypedDict):
+    provider: str
+    model: str
 
 class SubagentOutput3(TypedDict):
     kind: Literal["foreground"]
     runId: str
     output: list[Any]
+    route: NotRequired[SubagentOutput3Route]
 
 class SubagentForkArgs(TypedDict):
     # A short (3-5 word) description of the delegated task, for display.
@@ -395,18 +410,33 @@ class SubagentForkArgs(TypedDict):
     prompt: str
     # Additional keys beyond those declared are allowed.
 
+class SubagentForkOutput1Route(TypedDict):
+    provider: str
+    model: str
+
 class SubagentForkOutput1(TypedDict):
     kind: Literal["background"]
     jobId: str
+    route: NotRequired[SubagentForkOutput1Route]
+
+class SubagentForkOutput2Route(TypedDict):
+    provider: str
+    model: str
 
 class SubagentForkOutput2(TypedDict):
     kind: Literal["continuable"]
     subagentId: str
+    route: NotRequired[SubagentForkOutput2Route]
+
+class SubagentForkOutput3Route(TypedDict):
+    provider: str
+    model: str
 
 class SubagentForkOutput3(TypedDict):
     kind: Literal["foreground"]
     runId: str
     output: list[Any]
+    route: NotRequired[SubagentForkOutput3Route]
 
 class TodoWriteArgsTodos(TypedDict):
     # What the task is — a short imperative line.

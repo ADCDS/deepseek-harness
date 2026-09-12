@@ -29,11 +29,11 @@ kind: "package-reference"
 
 ### 浏览目录
 
-行显示 mode、`running`/`inactive` 活动状态与由日志支撑的可选 title；尾随列在上行显示提供方的持久化 token 用量总计，在下行显示活跃轮次耗时。键盘导航：ArrowRight/ArrowLeft 展开和折叠分支；ArrowUp/ArrowDown、Home、End 与 Escape 用于导航或关闭树。没有 label 的 one-shot 行回退到其会话 id；损坏、不受支持或不可用的行仍保持可读但禁用。
+行最多堆叠三行：子代理的 `provider/model` 路由独占一行，位于 label 行与由日志支撑的可选 title、mode、`running`/`inactive` 活动状态行之间；尾随列在上行显示提供方的持久化 token 用量总计，在下行显示活跃轮次耗时。键盘导航：ArrowRight/ArrowLeft 展开和折叠分支；ArrowUp/ArrowDown、Home、End 与 Escape 用于导航或关闭树。没有 label 的 one-shot 行回退到其会话 id；损坏、不受支持或不可用的行仍保持可读但禁用。
 
 ### 续接对话
 
-确切 parent 存活时，可继续 child 保留普通输入 chrome：child 运行期间输入和 Send 保持可用，因为每条后续消息都会进入 child 的 FIFO inbox，而独立的 Stop 经由 `subagents/interruptByParent` 路由。确切 parent 不可用且 child 未在运行的可继续 child 会选用说明恢复路径的只读编辑器；此类 child 仍在运行期间，selector 会让位给普通编辑器——输入区与 Send 被禁用，但独立的 Stop 保持可用。
+确切 parent 存活时，可继续 child 保留普通输入 chrome：child 运行期间输入和 Send 保持可用，因为每条后续消息都会进入 child 的 FIFO inbox，而独立的 Stop 经由 `subagents/interruptByParent` 路由。确切 parent 不可用且 child 未在运行的可继续 child 会选用说明恢复路径的只读编辑器；此类 child 仍在运行期间，selector 会让位给普通编辑器——输入区与 Send 被禁用，但独立的 Stop 保持可用。由于该接管会替换常驻编辑器、并连带替换编辑器的模型位，只读框同时报告委派固定的路由。
 
 ### `@` 引用 source
 
@@ -57,9 +57,13 @@ kind: "package-reference"
 
 token 用量总计为四个互不重叠的 `tokenUsage` 桶之和。耗时会累加已完成的 `subagentTiming` 轮次，仅在运行中 child 存在未结束轮次时每秒递增一次，并在 child 变为 inactive 后冻结；被中断的未结束轮次以其同一切面的 `active.through` 为上界，绝不使用更新的会话元数据。
 
+### 路由
+
+路由取自 child 自身的 `modelSelection.lastUsed`，即其最新请求 header 记录的提供方与模型，因此继承的路由与被覆盖的路由都被准确报告。行打印原始的提供方与模型 id，因为标题谱系无法访问拥有显示名的模型目录；[路由决策](../../../.agents/notes/implemented/feature/2026-09-12-subagent-route-visibility.zh.md)记录了原因。
+
 ### 编辑器选举
 
-one-shot child 始终选用只读编辑器。可继续 child 仅在其确切 parent 不可用且 child 未在运行时选用只读编辑器；否则普通编辑器的会话会经 `subagents/prompt` 路由提示词。本包绝不接收宿主上下文，也不调用面向模型的工具。
+one-shot child 始终选用只读编辑器。可继续 child 仅在其确切 parent 不可用且 child 未在运行时选用只读编辑器；否则普通编辑器的会话会经 `subagents/prompt` 路由提示词。两种只读情形都从 `modelSelection` 投影携带 child 的 `provider/model` 路由，因为该接管隐藏了编辑器自身的模型位，而 child 的 title 是模型撰写的文本而非路由。本包绝不接收宿主上下文，也不调用面向模型的工具。
 
 </details>
 

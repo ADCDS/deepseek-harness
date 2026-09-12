@@ -15,8 +15,10 @@ import type { PropsLocale, PropsRuntime, TranslateNS } from '@deepseek-ai/dsh-cl
 import { NS } from './locales.ts'
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-token-meter/client'
+import type {} from '@deepseek-ai/dsh-api-session-controller/types'
 import css from './SubagentHeaderLineage.module.css'
 import { indexSubagentDescendants } from './subagent-lineage.ts'
+import { routeLabel } from './subagent-route.ts'
 
 type CatalogEntry = SubagentCatalogSnapshot['entries'][number]
 type Catalogs = SessionListState['subagentsByParent']
@@ -301,6 +303,7 @@ function CatalogRows({
         const label = entry.label ?? entry.id
         const mode = entry.mode === 'one-shot' ? t('mode.oneShot') : t('mode.continuable')
         const activity = entry.activity === 'running' ? t('activity.running') : t('activity.inactive')
+        const route = routeLabel(summary?.projectionValues?.modelSelection)
         const secondary = [summary?.title, mode, activity]
           .filter(value => value !== undefined)
           .join(' · ')
@@ -354,7 +357,7 @@ function CatalogRows({
               tabIndex={0}
               aria-level={level}
               aria-current={isCurrent || undefined}
-              aria-label={[label, secondary, metrics].filter(value => value !== '').join(' ')}
+              aria-label={[label, route ?? '', secondary, metrics].filter(value => value !== '').join(' ')}
               {...knownLeaf ? {} : { 'aria-expanded': isExpanded }}
               className={css.row}
               onClick={open}
@@ -377,6 +380,10 @@ function CatalogRows({
                 <StateDot state={entry.activity === 'running' ? 'ongoing' : 'done'} />
                 <span className={css.content}>
                   <span className={`${css.label} ${isCurrent ? css.currentLabel : ''}`}>{label}</span>
+                  {/* Its own line: the route is the one fact that distinguishes
+                      sibling children running the same task, and a shared
+                      separator line truncates it behind the title. */}
+                  {route !== undefined && <span className={css.route}>{route}</span>}
                   <span className={css.summary}>{secondary}</span>
                 </span>
                 {metrics !== '' && (

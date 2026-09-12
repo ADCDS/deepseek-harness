@@ -93,6 +93,42 @@ describe('tool-call-model', () => {
     expect(toolRowModel('bash', result({ isError: true, error: { name: 'E', code: 'interrupted' } })).state).toBe('stopped')
   })
 
+  it('appends the child route a settled delegation recorded', () => {
+    const delegation = (over?: Partial<ToolResultNode>): ToolResultNode => result({
+      call: { name: 'subagent', argsRaw: '{"description":"Ping test"}' },
+      ...over,
+    })
+
+    expect(toolRowModel('subagent', delegation({
+      meta: { route: { provider: 'anthropic', model: 'claude-haiku-4-5' } },
+    })).summary).toBe('subagent · Ping test · anthropic/claude-haiku-4-5')
+    // A composition without a resolvable route records none; the row is unchanged.
+    expect(toolRowModel('subagent', delegation()).summary).toBe('subagent · Ping test')
+    // The route is a settled fact: a call still running has nothing to report.
+    expect(toolRowModel('subagent', running({
+      name: 'subagent', argsRaw: '{"description":"Ping test"}',
+    })).summary).toBe('subagent · Ping test')
+  })
+
+  it('ignores delegation metadata that is not a complete route', () => {
+    const withMeta = (meta: unknown): string => toolRowModel('subagent', result({
+      call: { name: 'subagent', argsRaw: '{"description":"Ping test"}' },
+      meta,
+    })).summary
+
+    // `meta` is durable tool-owned JSON, so another build may write anything here.
+    expect(withMeta(undefined)).toBe('subagent · Ping test')
+    expect(withMeta(null)).toBe('subagent · Ping test')
+    expect(withMeta('anthropic/claude-haiku-4-5')).toBe('subagent · Ping test')
+    expect(withMeta([{ provider: 'anthropic', model: 'claude-haiku-4-5' }])).toBe('subagent · Ping test')
+    expect(withMeta({ route: null })).toBe('subagent · Ping test')
+    expect(withMeta({ route: ['anthropic', 'claude-haiku-4-5'] })).toBe('subagent · Ping test')
+    expect(withMeta({ route: { provider: 'anthropic' } })).toBe('subagent · Ping test')
+    expect(withMeta({ route: { provider: '', model: 'claude-haiku-4-5' } })).toBe('subagent · Ping test')
+    expect(withMeta({ route: { provider: 'anthropic', model: '' } })).toBe('subagent · Ping test')
+    expect(withMeta({ route: { provider: 7, model: 'claude-haiku-4-5' } })).toBe('subagent · Ping test')
+  })
+
   it('derives the bash summary from description over command', () => {
     const m = toolRowModel('bash', running())
     expect(t(m.titleKey)).toBe('Bash')

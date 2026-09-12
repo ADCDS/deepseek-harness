@@ -111,6 +111,13 @@ export function ModelSelect(
     load()
   }
 
+  // The read-only seat has no trigger to open, so nothing else would ever
+  // request the advisory catalog that names the child's fixed route.
+  useEffect(() => {
+    if (available) return
+    reload()
+  }, [available])
+
   useEffect(() => {
     if (!open) return
     const closeOutside = (event: MouseEvent): void => {
@@ -156,8 +163,6 @@ export function ModelSelect(
     }
   }, [open, pane, state])
   /* jscpd:ignore-end */
-
-  if (!available) return null
 
   const show = (): void => {
     setPane('root')
@@ -251,6 +256,37 @@ export function ModelSelect(
       : effortLabel === undefined
         ? t('trigger.aria', { model: modelLabel })
         : t('trigger.ariaEffort', { model: modelLabel, effort: effortLabel })
+  // A subagent child runs the route its delegation fixed, so the seat reports
+  // that route instead of offering a choice. The provider is named explicitly:
+  // a bare model name does not say which platform served the child, which is
+  // the whole question a reader of a child conversation is asking. Nothing
+  // renders until a route is known, matching the seat's own blank window.
+  if (!available) {
+    const fixedRoute = currentChoice === undefined
+      ? state.current === null ? undefined : `${state.current.provider}/${state.current.model}`
+      : `${currentChoice.group.name}/${currentChoice.model.name}`
+    if (fixedRoute === undefined) return null
+    const fixedLabel = effortLabel === undefined ? fixedRoute : `${fixedRoute} · ${effortLabel}`
+    // A disabled trigger, not a bare span: `aria-label` on a roleless element is
+    // not reliably exposed, and this reuses the seat's own chip metrics and
+    // disabled tone so the composer row measures identically either way.
+    return (
+      <div className={css.root}>
+        <button
+          type="button"
+          className={css.trigger}
+          title={fixedLabel}
+          aria-label={t('trigger.fixedAria', { model: fixedRoute })}
+          disabled
+        >
+          <IconDataOutline16 className={css.triggerIcon} size={16} />
+          <span className={css.triggerLabel}>{fixedRoute}</span>
+          {effortLabel !== undefined && <span className={css.triggerEffort}>{effortLabel}</span>}
+        </button>
+      </div>
+    )
+  }
+
   itemRefs.current = []
   let itemIndex = 0
   const itemRef = () => {

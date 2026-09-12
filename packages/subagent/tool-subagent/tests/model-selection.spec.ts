@@ -201,6 +201,40 @@ describe('dsh-tool-subagent model selection', () => {
     })
   })
 
+  it('reports the child route in result metadata for both an override and pure inheritance', async () => {
+    const ctx = await setup({ provider: 'mock', withModelSelection: true })
+    ctx.llm.registerAdapter(['alpha'], new MockAdapter([], REASONING))
+    const parent = modelSelectionSetupAgent(ctx)
+    ;(parent as unknown as { options: Agent['options'] }).options = parentWithRoute().options
+
+    const overridden = await callSubagent(ctx, {
+      description: 'route work',
+      prompt: 'do it',
+      provider: 'alpha',
+      model: 'unlisted-model',
+    })
+    expect(overridden.isError).toBe(false)
+    expect(overridden.meta).toEqual({ route: { provider: 'alpha', model: 'unlisted-model' } })
+    // The route stays out of the model-facing text: the delegating model chose it.
+    expect(text(overridden)).not.toContain('unlisted-model')
+
+    // An inherited route is reported just as exactly, so a reader never has to
+    // infer "same as the parent" from an absent value.
+    const inherited = await callSubagent(ctx, { description: 'inherited', prompt: 'do it' })
+    expect(inherited.isError).toBe(false)
+    expect(inherited.meta).toEqual({ route: { provider: 'alpha', model: 'parent-model' } })
+  })
+
+  it('records no route metadata when no layer supplies a complete one', async () => {
+    const ctx = await setup({ provider: 'mock', withModelSelection: true })
+    const parent = modelSelectionSetupAgent(ctx)
+    ;(parent as unknown as { options: Agent['options'] }).options = {}
+
+    const settled = await callSubagent(ctx, { description: 'no route', prompt: 'do it' })
+    expect(settled.isError).toBe(false)
+    expect(settled.meta).toEqual({})
+  })
+
   it('accepts an effort-only override for the effective configured or parent route', async () => {
     const requests: SubagentStartRequest[] = []
     const ctx = await setup({

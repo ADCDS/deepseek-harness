@@ -9,7 +9,9 @@ import type { SessionId } from '@deepseek-ai/dsh-session/types'
 import {
   SubagentHeaderLineage, type SubagentHeaderLineageProps,
 } from '../src/client/SubagentHeaderLineage.tsx'
-import { SubagentReadOnlyComposer } from '../src/client/SubagentReadOnlyComposer.tsx'
+import {
+  SubagentReadOnlyComposer, type SubagentReadOnlyComposerProps,
+} from '../src/client/SubagentReadOnlyComposer.tsx'
 import { zh } from '../src/client/locales.ts'
 
 afterEach(() => {
@@ -186,6 +188,81 @@ describe('SubagentHeaderLineage', () => {
 
     expect(translate).toHaveBeenCalledWith('count.running.one', { count: 1 })
     expect(translate).toHaveBeenCalledWith('count.total.one', { count: 1 })
+  })
+
+  it('reports each child route on its own line so sibling platforms stay distinguishable', () => {
+    const second = 'child-2' as SessionId
+    const input = props(catalog({
+      entries: [
+        {
+          kind: 'child', id: CHILD, mode: 'continuable', label: 'worker',
+          activity: 'inactive', hasChildren: false,
+        },
+        {
+          kind: 'child', id: second, mode: 'continuable', label: 'reviewer',
+          activity: 'inactive', hasChildren: false,
+        },
+      ],
+    }), {}, {
+      [CHILD]: {
+        ...summary(CHILD, Date.now()),
+        parentId: PARENT,
+        origin: 'subagent',
+        projectionValues: {
+          modelSelection: {
+            lastUsed: { provider: 'anthropic', model: 'claude-haiku-4-5' },
+            next: null,
+          },
+        },
+      },
+      [second]: {
+        ...summary(second, Date.now()),
+        parentId: PARENT,
+        origin: 'subagent',
+        projectionValues: {
+          modelSelection: {
+            lastUsed: { provider: 'cf-workers-ai', model: '@cf/openai/gpt-oss-120b' },
+            next: null,
+          },
+        },
+      },
+    })
+    render(<SubagentHeaderLineage {...input} />)
+    hoverCatalog(screen.getByRole('button', { name: /2 个子代理/ }))
+
+    const worker = screen.getByRole('treeitem', { name: /worker anthropic\/claude-haiku-4-5/ })
+    expect(screen.getByRole('treeitem', { name: /reviewer cf-workers-ai\/@cf\/openai\/gpt-oss-120b/ }))
+      .toBeTruthy()
+
+    // The route is a line of its own: a sibling of the title line inside the
+    // stacked content column, not a segment concatenated into it.
+    const route = within(worker).getByText('anthropic/claude-haiku-4-5')
+    const titleLine = within(worker).getByText(/可继续/)
+    expect(route).not.toBe(titleLine)
+    expect(route.parentElement).toBe(titleLine.parentElement)
+    expect(route.previousElementSibling?.textContent).toBe('worker')
+  })
+
+  it('omits the route from a child that has not recorded a request yet', () => {
+    const input = props(catalog({
+      entries: [{
+        kind: 'child', id: CHILD, mode: 'continuable', label: 'worker',
+        activity: 'running', hasChildren: false,
+      }],
+    }), {}, {
+      [CHILD]: {
+        ...summary(CHILD, Date.now()),
+        parentId: PARENT,
+        origin: 'subagent',
+        running: true,
+        projectionValues: { modelSelection: { lastUsed: null, next: null } },
+      },
+    })
+    render(<SubagentHeaderLineage {...input} />)
+    hoverCatalog(screen.getByRole('button', { name: /1 个子代理/ }))
+
+    expect(screen.getByRole('treeitem', { name: /worker/ }).getAttribute('aria-label'))
+      .not.toContain('/')
   })
 
   it('removes the disclosure column from branchless catalog levels', () => {
@@ -819,13 +896,48 @@ describe('SubagentHeaderLineage', () => {
 })
 
 describe('SubagentReadOnlyComposer', () => {
+  const projection = (
+    value: unknown,
+  ): SubagentReadOnlyComposerProps['useProjection'] => () => value
+
   it('explains the exact missing-parent recovery path', () => {
-    render(<SubagentReadOnlyComposer matched={{ reason: 'parent-unavailable' }} t={t} />)
+    render(<SubagentReadOnlyComposer
+      matched={{ reason: 'parent-unavailable' }}
+      useProjection={projection(undefined)}
+      t={t}
+    />)
     expect(screen.getByRole('status').textContent).toContain('父会话当前不在线')
   })
 
   it('explains that one-shot histories never accept follow-ups', () => {
-    render(<SubagentReadOnlyComposer matched={{ reason: 'one-shot' }} t={t} />)
+    render(<SubagentReadOnlyComposer
+      matched={{ reason: 'one-shot' }}
+      useProjection={projection(undefined)}
+      t={t}
+    />)
     expect(screen.getByRole('status').textContent).toContain('一次性任务不支持后续消息')
+  })
+
+  it('reports the fixed route this takeover would otherwise hide', () => {
+    // The composer's model seat lives in the resident composer, which this
+    // entry replaces, so the frame has to carry the route itself.
+    render(<SubagentReadOnlyComposer
+      matched={{ reason: 'one-shot' }}
+      useProjection={projection({
+        lastUsed: { provider: 'anthropic', model: 'claude-haiku-4-5' },
+        next: null,
+      })}
+      t={t}
+    />)
+    expect(screen.getByRole('status').textContent).toContain('模型：anthropic/claude-haiku-4-5')
+  })
+
+  it('omits the route line before any request has recorded one', () => {
+    render(<SubagentReadOnlyComposer
+      matched={{ reason: 'one-shot' }}
+      useProjection={projection({ lastUsed: null, next: null })}
+      t={t}
+    />)
+    expect(screen.getByRole('status').textContent).not.toContain('模型')
   })
 })

@@ -183,8 +183,10 @@ export function apply(ctx: ClientContext): void {
         return {
           available,
           directory: directory.store,
+          // Loaded for children too: the read-only seat names the child's fixed
+          // route from the same advisory catalog the selectable seat renders.
           load: () => {
-            if (available) directory.load().catch(() => { /* surfaced on the store */ })
+            directory.load().catch(() => { /* surfaced on the store */ })
           },
           select: (selection: ModelSelection) => available
             ? directory.select(selection).then(() => true, () => false)

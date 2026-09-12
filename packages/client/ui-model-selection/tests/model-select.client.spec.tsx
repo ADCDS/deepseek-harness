@@ -237,18 +237,58 @@ describe('ModelSelect reasoning effort', () => {
     }
   })
 
-  it('renders no Agent-bound control for an addressed subagent session', () => {
+  it('reports the fixed route of an addressed subagent session without offering selection', () => {
     const load = vi.fn()
+    const select = vi.fn().mockResolvedValue(false)
     render(<ModelSelect
       locked={false}
       available={false}
       directory={createSnapshotStore(state())}
       load={load}
+      select={select}
+      t={t}
+    />)
+
+    // The provider is named beside the model: a child's platform is exactly
+    // what the parent's own seat cannot tell a reader.
+    const seat = screen.getByRole('button')
+    expect(seat.textContent).toContain('DeepSeek/DeepSeek-V4-Flash')
+    expect(seat.getAttribute('aria-label')).toContain('DeepSeek/DeepSeek-V4-Flash')
+    expect((seat as HTMLButtonElement).disabled).toBe(true)
+    // The seat has no trigger to open, so it requests the naming catalog itself.
+    expect(load).toHaveBeenCalled()
+
+    fireEvent.click(seat)
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(select).not.toHaveBeenCalled()
+  })
+
+  it('renders nothing for an addressed subagent session whose route is not yet known', () => {
+    render(<ModelSelect
+      locked={false}
+      available={false}
+      directory={createSnapshotStore(state({ current: null, groups: [], status: 'loading' }))}
+      load={vi.fn()}
       select={vi.fn().mockResolvedValue(false)}
       t={t}
     />)
 
     expect(screen.queryByRole('button')).toBeNull()
-    expect(load).not.toHaveBeenCalled()
+  })
+
+  it('names an addressed subagent route the catalog does not advertise by its raw ids', () => {
+    render(<ModelSelect
+      locked={false}
+      available={false}
+      directory={createSnapshotStore(state({
+        current: { provider: 'cf-workers-ai', model: '@cf/openai/gpt-oss-120b' },
+        routable: false,
+      }))}
+      load={vi.fn()}
+      select={vi.fn().mockResolvedValue(false)}
+      t={t}
+    />)
+
+    expect(screen.getByRole('button').textContent).toContain('cf-workers-ai/@cf/openai/gpt-oss-120b')
   })
 })

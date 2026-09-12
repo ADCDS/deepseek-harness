@@ -1,5 +1,6 @@
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { NS } from './locales.ts'
+import { routeLabel } from './subagent-route.ts'
 import css from './SubagentReadOnlyComposer.module.css'
 
 /** Why a catalog-addressed conversation cannot accept human input. */
@@ -13,19 +14,28 @@ export type SubagentReadOnlyComposerProps =
 
 /**
  * Explain why the normal composer is unavailable for an addressed child.
+ *
+ * This takeover replaces the resident composer, and the composer's model seat
+ * with it, so the frame also reports the route the delegation fixed: a child's
+ * platform is otherwise invisible on its own page, where the title is
+ * model-authored text rather than a route.
  * @param props - selector-owned read-only reason plus standard slot props.
  * @returns A read-only composer replacement.
  */
 export function SubagentReadOnlyComposer({
-  matched, t,
-}: Pick<SubagentReadOnlyComposerProps, 'matched' | 't'>) {
+  matched, useProjection, t,
+}: Pick<SubagentReadOnlyComposerProps, 'matched' | 't' | 'useProjection'>) {
   const oneShot = matched.reason === 'one-shot'
+  const route = routeLabel(useProjection('modelSelection'))
   return (
     <div className={css.frame} role="status">
-      <strong>{t(oneShot ? 'readonly.oneShot.title' : 'readonly.title')}</strong>
-      <span>
-        {t(oneShot ? 'readonly.oneShot.body' : 'readonly.body')}
+      <span className={css.notice}>
+        <strong>{t(oneShot ? 'readonly.oneShot.title' : 'readonly.title')}</strong>
+        <span>
+          {t(oneShot ? 'readonly.oneShot.body' : 'readonly.body')}
+        </span>
       </span>
+      {route !== undefined && <span className={css.route}>{t('readonly.route', { model: route })}</span>}
     </div>
   )
 }

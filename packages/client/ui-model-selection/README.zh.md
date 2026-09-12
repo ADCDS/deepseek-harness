@@ -27,6 +27,8 @@ Web GUI 允许用户通过 `/model` 弹窗或 composer 模型控件切换既有�
 
 与 `ui-conversation` 及命令包一起挂载本插件；composer 随即在待处理指示器旁显示模型位，`/model` 则以弹窗打开同一份目录。当确切提供方／模型对仍在已公布分组中时，两个界面都显示 Host 报告的当前选择；目录行缺席时，可路由的选择保持不变，触发器提示 `Select model`。
 
+在路由由其委派固定的 subagent 会话中，该位以禁用触发器报告 `provider/model`，`/model` 则始终缺席。此处点明提供方，因为子代理的平台正是其读者缺失的信息；目录未公布的路由以原始 id 命名，并且在子代理首次请求记录路由之前，该位保持为空。
+
 ### 模型与推理强度
 
 模型按提供方分组。composer 菜单只显示模型与推理强度名称。`/model` 弹窗显示提供方名称与目录说明；其中两个内置 DeepSeek 模型的说明使用当前语言，外部提供方说明保持原文。弹窗应用所选模型的默认推理强度；composer 随后可以选择任一已公布的推理强度。适配器没有推理元数据时不显示 Effort 行；不存在任意推理强度输入。
@@ -43,7 +45,7 @@ Web GUI 允许用户通过 `/model` 弹窗或 composer 模型控件切换既有�
 <details>
 <summary>实现细节——点击展开</summary>
 
-两个入口共用一份由 `ModelDirectoryResolver`（`ctx.modelDirectories`）持有的会话级目录：`/model` popupSelect 贡献项（经 `ctx.commandUi` 注册）与 composer 的具名 `conversation.input.model` 位都经 `session.models` 加载会话的建议目录、经 `session.selectModel` 通过同一个 `ModelDirectory` 实例提交，因此任一入口所做的切换正是另一个入口接下来显示的。目录加载与选择共享一个代次计数器，旧响应不会覆盖新结果；连接重置丢弃所有常驻投影，并在显示前重新拉取 Host 恢复的选择。目录按会话惰性解析，随会话作用域一并 dispose（资源释放）；已寻址 subagent 会话不公开任一入口。每份常驻目录都会直接在转发的 `llm/adapters-updated` 与 `settings/document-updated` owner 事件上重拉。
+两个入口共用一份由 `ModelDirectoryResolver`（`ctx.modelDirectories`）持有的会话级目录：`/model` popupSelect 贡献项（经 `ctx.commandUi` 注册）与 composer 的具名 `conversation.input.model` 位都经 `session.models` 加载会话的建议目录、经 `session.selectModel` 通过同一个 `ModelDirectory` 实例提交，因此任一入口所做的切换正是另一个入口接下来显示的。目录加载与选择共享一个代次计数器，旧响应不会覆盖新结果；连接重置丢弃所有常驻投影，并在显示前重新拉取 Host 恢复的选择。目录按会话惰性解析，随会话作用域一并 dispose（资源释放）。已寻址 subagent 会话既不公开 `/model` 入口，也不公开可选择的位；`ModelDirectory.load` 对其保持开放，因为建议目录是不指名任何会话的 Host 代次范围展示数据，而 `select` 携带会话权限，在目录层就被拒绝，不只是在入口层。每份常驻目录都会直接在转发的 `llm/adapters-updated` 与 `settings/document-updated` owner 事件上重拉。
 
 </details>
 
@@ -77,7 +79,7 @@ Web GUI 允许用户通过 `/model` 弹窗或 composer 模型控件切换既有�
 
 这些限制界定了当前模型选择界面。它们是当前包约束，不是通用模型路由器对比或任务积压。
 
-- **无创建期或已寻址 subagent 选择**——两个入口都要求既有普通会话的 agent（智能体）；没有可纳入会话创建的草稿阶段模型选择，subagent 继续执行也有意不公开独立的模型选择约定。
+- **无创建期或已寻址 subagent 选择**——两个入口都要求既有普通会话的 agent（智能体）；没有可纳入会话创建的草稿阶段模型选择，subagent 继续执行也有意不公开独立的模型选择约定。subagent 的位报告其固定路由，绝不提供切换。
 - **目录名仅供呈现**——选择与持久化使用提供方／模型／推理强度 id；目录查询或确切模型元数据查询失败的提供方以不可选失败行列出，重新加载前保持原样。
 - **不能任意输入推理强度**——composer 仅提供确切模型由适配器公布的推理强度；适配器没有推理元数据时不显示 Effort 行。
 

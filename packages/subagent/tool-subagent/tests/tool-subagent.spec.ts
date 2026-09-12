@@ -1328,6 +1328,7 @@ describe('dsh-tool-subagent continuable background mode', () => {
     expect(succeeded.isError ? undefined : succeeded.value).toEqual({
       kind: 'continuable',
       subagentId: survivingChildId,
+      route: { provider: 'mock', model: 'mock' },
     })
     await vi.waitFor(() => {
       expect(ctx.agents.get(survivingChildId!)).toBeUndefined()

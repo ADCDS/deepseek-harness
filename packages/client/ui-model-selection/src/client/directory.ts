@@ -69,11 +69,14 @@ export class ModelDirectory {
   }
 
   /**
-   * Ensure the Host generation's shared advisory catalog is loaded.
+   * Ensure the Host generation's shared advisory catalog is loaded. Permitted
+   * for every Session including addressed subagent children: the catalog is
+   * Host-generation-wide display data that names no Session, and a child needs
+   * it to render the fixed route it already runs on. Only {@link select}
+   * carries Session authority and stays gated.
    * @returns the fresh directory value.
    */
   async load(): Promise<ModelDirectoryState> {
-    this.assertAvailable()
     await this.catalog.load()
     this.syncInputs()
     return this.store.getSnapshot()
