@@ -76,7 +76,6 @@ export class ModelDirectory {
    * @returns the fresh directory value.
    */
   async load(): Promise<ModelDirectoryState> {
-    this.assertAvailable()
     await this.catalog.load()
     this.syncInputs()
     return this.store.getSnapshot()
@@ -159,6 +158,19 @@ export class ModelDirectory {
     if (this.disposed) return
     const catalog = this.catalog.store.getSnapshot()
     const projected = modelSelectionProjection(this.projected.getSnapshot())
+    if (!this.available()) {
+      const selection = projected?.lastUsed
+      this.store.set({
+        current: selection ?? null,
+        routable: null,
+        groups: catalog.value?.groups ?? [],
+        failures: catalog.value?.failures ?? [],
+        status: catalog.status === 'error' ? 'error' : catalog.status === 'ready' ? 'ready' : 'loading',
+        pending: null,
+        error: catalog.error,
+      })
+      return
+    }
     const intended = projected?.next ?? catalog.value?.default
     const reasoning = intended === undefined ? undefined : this.catalog.reasoningFor(intended)
     const effort = intended?.reasoningEffort ?? reasoning?.defaultEffort

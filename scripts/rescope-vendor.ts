@@ -204,6 +204,41 @@ const POSTCONDITIONS: readonly PostCondition[] = [
  */
 const EXACT_EDITS: readonly ExactEdit[] = [
   {
+    id: 'optional-bundle-context-import',
+    file: 'apps/cli/tests/optional-bundle-transitions.e2e.ts',
+    find: "import type { Context } from 'cordis'",
+    replace: "import type { Context } from '@deepseek-ai/cordis'",
+    expect: 1,
+  },
+  {
+    id: 'inspect-registry-context-import',
+    file: 'packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts',
+    find: "import { Context } from 'cordis'",
+    replace: "import { Context } from '@deepseek-ai/cordis'",
+    expect: 1,
+  },
+  {
+    id: 'inspect-registry-fiber-import',
+    file: 'packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts',
+    find: "import type { Fiber } from 'cordis'",
+    replace: "import type { Fiber } from '@deepseek-ai/cordis'",
+    expect: 1,
+  },
+  {
+    id: 'inspect-liveness-context-type',
+    file: 'snapshots/session/cordis-inspect-liveness/client-fixture.mjs',
+    find: "import('cordis').Context",
+    replace: "import('@deepseek-ai/cordis').Context",
+    expect: 1,
+  },
+  {
+    id: 'inspect-timeout-context-type',
+    file: 'snapshots/session/cordis-inspect-timeout/client-fixture.mjs',
+    find: "import('cordis').Context",
+    replace: "import('@deepseek-ai/cordis').Context",
+    expect: 2,
+  },
+  {
     id: 'loader-diff-schemastery-import',
     file: 'vendor/loader/src/config/diff.ts',
     find: "import type Schema from 'schemastery'",

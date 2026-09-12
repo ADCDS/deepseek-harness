@@ -150,6 +150,25 @@ export function assertAllowedModelSelection(
 }
 
 /**
+ * Resolve display metadata only from route values the backend accepts.
+ * @param parentOptions - Current parent values the child inherits from.
+ * @param requested - Per-child options after request/config merging.
+ * @param defaults - Route defaults published by the backend.
+ * @param inheritsParent - Whether the backend inherits missing parent route values.
+ * @returns the effective route, or undefined when no layer supplies both halves.
+ */
+export function effectiveChildRoute(
+  parentOptions: AgentOptions,
+  requested: AgentOptions | undefined,
+  defaults?: AgentOptions,
+  inheritsParent = true,
+): AllowedModelRoute | undefined {
+  const provider = requested?.provider ?? defaults?.provider ?? (inheritsParent ? parentOptions.provider : undefined)
+  const model = requested?.model ?? defaults?.model ?? (inheritsParent ? parentOptions.model : undefined)
+  return provider === undefined || model === undefined ? undefined : { provider, model }
+}
+
+/**
  * Whether configured Agent options require route validation before delegation.
  * @param options - Tool-instance child defaults.
  * @returns Whether configured provider, model, or effort values must be resolved.

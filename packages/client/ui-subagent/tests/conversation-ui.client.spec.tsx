@@ -1728,12 +1728,12 @@ describe('SubagentHeaderLineage', () => {
 
 describe('SubagentReadOnlyComposer', () => {
   it('keeps an unknown child read-only until its descriptor is available', () => {
-    render(<SubagentReadOnlyComposer matched={{ reason: 'unknown' }} t={t} />)
+    render(<SubagentReadOnlyComposer useProjection={() => undefined} matched={{ reason: 'unknown' }} t={t} />)
     expect(screen.getByRole('status').textContent).toContain('读取子会话后才能确定是否可继续')
   })
 
   it('explains that one-shot histories never accept follow-ups', () => {
-    render(<SubagentReadOnlyComposer matched={{ reason: 'one-shot' }} t={t} />)
+    render(<SubagentReadOnlyComposer useProjection={() => undefined} matched={{ reason: 'one-shot' }} t={t} />)
     expect(screen.getByRole('status').textContent).toContain('一次性任务不支持后续消息')
   })
 })
@@ -1772,4 +1772,10 @@ it.each([false, true])('closes a pinned wide catalog on its next click (hover fi
   expect(screen.queryByRole('dialog')).toBeNull()
   expect(trigger.getAttribute('aria-expanded')).toBe('false')
   expect(document.activeElement).toBe(trigger)
+})
+
+it('reports the recorded route in a read-only child composer', () => {
+  render(<SubagentReadOnlyComposer matched={{ reason: 'one-shot' }} t={t}
+    useProjection={() => ({ lastUsed: { provider: 'claude', model: 'child-model' }, next: null })} />)
+  expect(screen.getByRole('status').textContent).toContain('claude/child-model')
 })

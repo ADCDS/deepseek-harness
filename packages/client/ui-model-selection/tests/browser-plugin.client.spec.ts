@@ -542,7 +542,7 @@ describe('ui-model-selection dual entry', () => {
     expect(() => b.seat().inject!(sid('ghost'))).toThrow(/resolved no scope/)
   })
 
-  it('withholds both model entries from addressed subagent sessions without Agent-bound RPCs', async () => {
+  it('loads child route labels while refusing model changes and the model command', async () => {
     const b = await bench()
     b.mint('child')
     b.address(sid('child'))
@@ -557,8 +557,7 @@ describe('ui-model-selection dual entry', () => {
     expect(face.available).toBe(false)
     face.load()
     await expect(face.select({ provider: 'deepseek', model: 'deepseek-v4-pro' })).resolves.toBeUndefined()
-    await expect(b.ctx.modelDirectories.directoryFor(sid('child')).load())
-      .rejects.toThrow(/unavailable for addressed subagent/)
+    await expect(b.ctx.modelDirectories.directoryFor(sid('child')).load()).resolves.toMatchObject({ current: null })
     await expect(b.ctx.modelDirectories.directoryFor(sid('child')).select({
       provider: 'deepseek',
       model: 'deepseek-v4-pro',
@@ -587,4 +586,23 @@ it.each([false, true])('reports accepted switches with blank=%s and no refused s
     await face.select({ provider: 'deepseek-official', model: 'deepseek-v4-flash' })
     expect(b.track).not.toHaveBeenCalled()
   } finally { await scope.fiber.dispose(); await b.ctx.fiber.dispose() }
+})
+
+
+it('displays a child last-used route independently of host defaults and catalog failures', async () => {
+  const b = await bench('en')
+  try {
+    b.mint('child-route')
+    b.address(sid('child-route'))
+    const directory = b.ctx.modelDirectories.directoryFor(sid('child-route'))
+    await directory.load()
+    expect(directory.store.getSnapshot().current).toBeNull()
+    const used = { provider: 'external', model: 'unlisted-child' }
+    b.setProjected(sid('child-route'), { lastUsed: used, next: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } })
+    expect(directory.store.getSnapshot().current).toEqual(used)
+    b.setCatalogFailure(true)
+    await directory.load()
+    expect(directory.store.getSnapshot().current).toEqual(used)
+    expect(b.calls.select).toBe(0)
+  } finally { await b.ctx.fiber.dispose() }
 })

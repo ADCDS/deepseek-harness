@@ -52,6 +52,7 @@ export const zh = {
   'readonly.oneShot.title': '一次性子智能体记录',
   'readonly.title': '此子智能体暂时只读',
   'readonly.oneShot.body': '一次性任务不支持后续消息，可在这里查看完整执行记录。',
+  'readonly.route': '模型：{model}',
 } as const
 
 /** English dictionary, key-identical to the Chinese source of truth. */
@@ -103,6 +104,7 @@ export const en: Record<SubagentKey, string> = {
   'readonly.oneShot.title': 'One-shot subagent record',
   'readonly.title': 'This subagent is read-only for now',
   'readonly.oneShot.body': 'One-shot tasks do not accept follow-ups; review the full execution record here.',
+  'readonly.route': 'Model: {model}',
 }
 
 /** Key domain of the `subagent` namespace (zh is the source of truth). */
@@ -157,6 +159,7 @@ export const ja = {
   'readonly.oneShot.title': '単発サブエージェントの記録',
   'readonly.title': 'このサブエージェントは現在読み取り専用です',
   'readonly.oneShot.body': '単発タスクは追加のメッセージを受け付けません。ここで実行記録の全体を確認できます。',
+  'readonly.route': 'モデル：{model}',
 } satisfies Record<keyof typeof en, string>
 
 /** Spanish dictionary, checked against the English keys. */
@@ -208,6 +211,7 @@ export const es = {
   'readonly.oneShot.title': 'Registro de subagente de una sola vez',
   'readonly.title': 'Este subagente es de solo lectura por ahora',
   'readonly.oneShot.body': 'Las tareas únicas no aceptan seguimientos; revise el registro de ejecución completo aquí.',
+  'readonly.route': 'Modelo: {model}',
 } satisfies Record<keyof typeof en, string>
 
 /** French dictionary, checked against the English keys. */
@@ -259,6 +263,7 @@ export const fr = {
   'readonly.oneShot.title': 'Enregistrement de sous-agent unique',
   'readonly.title': 'Ce sous-agent est actuellement en lecture seule',
   'readonly.oneShot.body': 'Les tâches ponctuelles n’acceptent pas de messages de suivi ; consultez leur journal d’exécution complet ici.',
+  'readonly.route': 'Modèle : {model}',
 } satisfies Record<keyof typeof en, string>
 
 /** German dictionary, checked against the English keys. */
@@ -310,6 +315,7 @@ export const de = {
   'readonly.oneShot.title': 'Einmaliger Subagentendatensatz',
   'readonly.title': 'Dieser Subagent ist derzeit schreibgeschützt',
   'readonly.oneShot.body': 'Einmalige Aufgaben akzeptieren keine Folgeaufgaben; Sehen Sie sich hier den vollständigen Ausführungsbericht an.',
+  'readonly.route': 'Modell: {model}',
 } satisfies Record<keyof typeof en, string>
 
 /** Russian dictionary, checked against the English keys. */
@@ -361,6 +367,7 @@ export const ru = {
   'readonly.oneShot.title': 'Разовая запись субагента',
   'readonly.title': 'Этот субагент пока доступен только для чтения.',
   'readonly.oneShot.body': 'Одноразовые задачи не допускают последующих действий; просмотреть полную запись выполнения можно здесь.',
+  'readonly.route': 'Модель: {model}',
 } satisfies Record<keyof typeof en, string>
 
 /** Portuguese dictionary, checked against the English keys. */
@@ -412,4 +419,5 @@ export const pt = {
   'readonly.oneShot.title': 'Registro de subagente único',
   'readonly.title': 'Este subagente é somente leitura por enquanto',
   'readonly.oneShot.body': 'Tarefas únicas não aceitam acompanhamentos; revise o registro completo da execução aqui.',
+  'readonly.route': 'Modelo: {model}',
 } satisfies Record<keyof typeof en, string>

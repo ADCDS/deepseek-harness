@@ -482,7 +482,7 @@ describe('ModelSelect reasoning effort', () => {
     expect(screen.queryByRole('menu')).toBeNull()
   })
 
-  it('renders no Agent-bound control for an addressed subagent session', () => {
+  it('renders a disabled route for an addressed subagent session', () => {
     const load = vi.fn()
     render(<ModelSelect renderSlot={renderLabel}
       locked={false}
@@ -493,8 +493,8 @@ describe('ModelSelect reasoning effort', () => {
       t={t}
     />)
 
-    expect(screen.queryByRole('button')).toBeNull()
-    expect(load).not.toHaveBeenCalled()
+    expect(screen.getByRole('button').hasAttribute('disabled')).toBe(true)
+    expect(load).toHaveBeenCalledOnce()
   })
 })
 
@@ -1134,4 +1134,15 @@ it('dismisses contributed options with focus on the trigger before opening anoth
     expect(document.activeElement).toBe(trigger)
   })
   expect(screen.queryByRole('menu')).toBeNull()
+})
+
+it('reports a fixed child route by raw IDs and hides a missing route', () => {
+  const directory = createSnapshotStore(state({ current: { provider: 'child-provider', model: 'unlisted-child' }, groups: [] }))
+  const view = render(<ModelSelect renderSlot={renderLabel} locked={false} available={false} directory={directory} load={vi.fn()}
+    resolveText={resolveText} select={vi.fn()} t={t} />)
+  const chip = screen.getByRole('button')
+  expect(chip.textContent).toContain('child-provider/unlisted-child')
+  expect(chip.hasAttribute('disabled')).toBe(true)
+  act(() => { directory.update((snapshot) => { snapshot.current = null }) })
+  expect(view.container.textContent).toBe('')
 })

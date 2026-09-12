@@ -17,6 +17,7 @@ import type {} from '@deepseek-ai/dsh-token-meter/client'
 import type {} from '@deepseek-ai/dsh-agent-team/client'
 import type {} from './slots.ts'
 import css from './SubagentHeaderLineage.module.css'
+import { routeLabel } from './subagent-route.ts'
 
 type SubagentCatalogSnapshot = Omit<SessionProjectionSnapshot, 'values' | 'state'> & {
   state: 'loading' | 'ready' | 'migration-required' | 'error'
@@ -298,6 +299,7 @@ function CatalogRows({
           : completed
             ? t('activity.completed')
             : t('activity.inactive')
+        const route = routeLabel(summary?.projectionValues?.modelSelection)
         const secondary = [secondaryLabel, requiresOpening ? t('catalog.migrationRequired') : mode, activity]
           .filter(value => value !== undefined)
           .join(' · ')
@@ -357,7 +359,7 @@ function CatalogRows({
               aria-disabled={external || undefined}
               aria-level={level}
               aria-current={isCurrent || undefined}
-              aria-label={[primaryLabel, secondary, metrics].filter(value => value !== '').join(' ')}
+              aria-label={[primaryLabel, route ?? '', secondary, metrics].filter(value => value !== '').join(' ')}
               {...canExpand ? { 'aria-expanded': isExpanded } : {}}
               className={css.row}
               onClick={open}
@@ -382,6 +384,7 @@ function CatalogRows({
                 </span>
                 <span className={css.content}>
                   <span className={`${css.label} ${isCurrent ? css.currentLabel : ''}`}>{primaryLabel}</span>
+                  {route !== undefined && <span className={css.route}>{route}</span>}
                   {secondaryLabel !== undefined && (
                     <span className={css.secondaryLabel}>{secondaryLabel}</span>
                   )}

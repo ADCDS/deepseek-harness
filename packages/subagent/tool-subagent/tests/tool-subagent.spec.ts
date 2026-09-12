@@ -847,6 +847,7 @@ describe('dsh-tool-subagent local activation', () => {
     expect(succeeded.isError ? undefined : succeeded.value).toEqual({
       kind: 'activation',
       name: 'agent-2',
+      route: { provider: 'mock', model: 'mock' },
     })
     await vi.waitFor(() => {
       expect(ctx.agents.get(survivingChildId!)).toBeUndefined()

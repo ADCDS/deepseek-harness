@@ -99,6 +99,8 @@ Expanded status dots and labels use static semantic colors. Catalog failure stat
 
 Terminal prompt labels use recorded result `cwd`. Older successful root shell calls fall back to their original workspace and authored workdir; running calls show a directory only when their workdir is absolute. Terminal sends do not infer a process directory from the Session.
 
+A settled delegation row appends the child's `provider/model` from the `route` the tool persisted in its result metadata, so the parent transcript names the platform that served the call; a row whose metadata carries no complete route is unchanged, which also covers delegations recorded before the tool wrote one.
+
 The terminal model uses `hasSpillNotice` from the browser-safe `@deepseek-ai/dsh-spill-policy/notice` entry, not an independent UI pattern. The [spill-policy README](../../spill/spill-policy/README.md#shared-notice-ownership) owns notice formatting and recognition. This check conservatively selects generic output; matching text cannot authenticate its source, and replay leaves recorded result bytes untouched.
 
 ### Declared optional capabilities

@@ -25,6 +25,8 @@ Use this package to give an agent a named tool that delegates work to a configur
 <a id="use-this-package"></a>
 ## Use this package
 
+Activation results optionally carry a resolved child `route` and expose it through presentation metadata. Rendered tool text remains the child ID. Backend defaults take precedence over parent inheritance; external backends without a known route omit the field.
+
 The optional `cwd` argument selects the child's initial working directory. Relative paths resolve against the caller's current directory; omission inherits it. Existing children retain their own directories when the caller changes directory.
 
 Mount one instance per delegation target, each with a distinct `toolName`. The tool exists exactly while its provider does, so sibling load order and provider reloads never strand it.

@@ -105,6 +105,42 @@ describe('tool-call-model', () => {
     expect(toolRowModel('bash', result({ isError: true, error: { name: 'E', code: 'interrupted' } })).state).toBe('stopped')
   })
 
+  it('appends the child route a settled delegation recorded', () => {
+    const delegation = (over?: Partial<ToolResultNode>): ToolResultNode => result({
+      call: { name: 'subagent', argsRaw: '{"description":"Ping test"}' },
+      ...over,
+    })
+
+    expect(toolRowModel('subagent', delegation({
+      meta: { route: { provider: 'anthropic', model: 'claude-haiku-4-5' } },
+    })).summary).toBe('Ping test · anthropic/claude-haiku-4-5')
+    // A composition without a resolvable route records none; the row is unchanged.
+    expect(toolRowModel('subagent', delegation()).summary).toBe('Ping test')
+    // The route is a settled fact: a call still running has nothing to report.
+    expect(toolRowModel('subagent', running({
+      name: 'subagent', argsRaw: '{"description":"Ping test"}',
+    })).summary).toBe('Ping test')
+  })
+
+  it('ignores delegation metadata that is not a complete route', () => {
+    const withMeta = (meta: unknown): string => toolRowModel('subagent', result({
+      call: { name: 'subagent', argsRaw: '{"description":"Ping test"}' },
+      meta,
+    })).summary
+
+    // `meta` is durable tool-owned JSON, so another build may write anything here.
+    expect(withMeta(undefined)).toBe('Ping test')
+    expect(withMeta(null)).toBe('Ping test')
+    expect(withMeta('anthropic/claude-haiku-4-5')).toBe('Ping test')
+    expect(withMeta([{ provider: 'anthropic', model: 'claude-haiku-4-5' }])).toBe('Ping test')
+    expect(withMeta({ route: null })).toBe('Ping test')
+    expect(withMeta({ route: ['anthropic', 'claude-haiku-4-5'] })).toBe('Ping test')
+    expect(withMeta({ route: { provider: 'anthropic' } })).toBe('Ping test')
+    expect(withMeta({ route: { provider: '', model: 'claude-haiku-4-5' } })).toBe('Ping test')
+    expect(withMeta({ route: { provider: 'anthropic', model: '' } })).toBe('Ping test')
+    expect(withMeta({ route: { provider: 7, model: 'claude-haiku-4-5' } })).toBe('Ping test')
+  })
+
   it('derives the bash summary from description over command', () => {
     const m = toolRowModel('bash', running())
     expect(t(m.titleKey)).toBe('运行命令')

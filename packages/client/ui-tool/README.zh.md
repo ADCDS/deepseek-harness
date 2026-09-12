@@ -99,6 +99,8 @@ Auto 拒绝优先于按工具名选择的专门视图。其通用行保留调用
 
 终端提示标签使用结果记录的 `cwd`。成功的旧根 shell 调用回退到原始工作区与调用参数中的 workdir；运行中的调用只有在 workdir 为绝对路径时才显示目录。终端发送不会根据 Session 推测进程目录。
 
+已结算的委派行会从工具持久化在结果 metadata 中的 `route` 追加子代理的 `provider/model`，使父转录点明服务该调用的平台；metadata 未携带完整路由的行保持不变，这也涵盖了工具开始写入路由之前记录的委派。
+
 terminal model 使用浏览器安全入口 `@deepseek-ai/dsh-spill-policy/notice` 的 `hasSpillNotice`，而非独立的 UI 匹配规则。[spill-policy README](../../spill/spill-policy/README.zh.md#shared-notice-ownership) 负责提示文本的格式化与识别。该检查保守地选择通用输出；匹配的文本无法证明其来源，回放也不改变已记录的结果字节。
 
 ### 声明的可选能力

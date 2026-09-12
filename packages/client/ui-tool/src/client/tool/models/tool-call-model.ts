@@ -269,6 +269,23 @@ function deriveSummary(variant: ToolRowVariant, argsRaw: string): string {
   return firstLine(argsRaw)
 }
 
+/**
+ * The child route a settled delegation persisted in its result metadata. Read
+ * defensively: `meta` is durable tool-owned JSON, so a log written by another
+ * build may carry any value here.
+ * @param meta - persisted result metadata from the tool/result event.
+ * @returns `provider/model`, or undefined when the call recorded no route.
+ */
+function delegationRoute(meta: unknown): string | undefined {
+  if (typeof meta !== 'object' || meta === null || Array.isArray(meta)) return undefined
+  const route = (meta as Record<string, unknown>).route
+  if (typeof route !== 'object' || route === null || Array.isArray(route)) return undefined
+  const { provider, model } = route as Record<string, unknown>
+  return typeof provider === 'string' && provider !== '' && typeof model === 'string' && model !== ''
+    ? `${provider}/${model}`
+    : undefined
+}
+
 /** Path keys only — never `url` (web_fetch lands on the read variant). */
 const FILE_PATH_KEYS = ['path', 'file_path'] as const
 
@@ -399,7 +416,9 @@ export function toolRowModel(toolName: string, block: ToolCallBlock, cwd?: strin
   const base = toolName === 'apply_patch' || primary.summary !== '' || argsRaw === null ? primary.summary
     : argsRaw === '' ? block.callId
       : abbreviateHomePath(relativizeToCwd(deriveSummary(variant, argsRaw), cwd), home)
-  const summary = [titleKey === 'tool.title.generic' ? toolName : '', base].filter(Boolean).join(' · ')
+  const named = [titleKey === 'tool.title.generic' ? toolName : '', base].filter(Boolean).join(' · ')
+  const route = done ? delegationRoute(block.meta) : undefined
+  const summary = route === undefined ? named : `${named} · ${route}`
   // The empty string is "no text" for both derived result fields: a settled
   // call with blank content has nothing to expand, and a blank first line
   // would erase the collapsed error row's summary slot.

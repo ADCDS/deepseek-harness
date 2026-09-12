@@ -21,6 +21,7 @@ import {
 } from '@deepseek-ai/dsh-subagent'
 import type { SubagentProvider } from '@deepseek-ai/dsh-subagent'
 import {
+  effectiveChildRoute,
   hasConfiguredLlmSelection,
   hasDelegationModelRequest,
   preflightChildLlmRoute,
@@ -265,10 +266,18 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           properties: {
             kind: { type: 'string', required: true, const: 'activation' },
             name: { type: 'string', required: true },
+            route: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                provider: { type: 'string', required: true },
+                model: { type: 'string', required: true },
+              },
+            },
           },
         },
         render: (_args, value) => [{ type: 'text', text: `started subagent ${value.name}` }],
-        presentationMeta: (_args, value) => ({ kind: value.kind, name: value.name }),
+        presentationMeta: (_args, value) => ({ kind: value.kind, name: value.name, ...value.route === undefined ? {} : { route: value.route } }),
       },
       isConcurrencySafe: () => true,
       async execute(args, exec) {
@@ -323,6 +332,10 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           ...maxDepth !== undefined ? { maxDepth } : {},
         }
 
+        const route = effectiveChildRoute(
+          parentOptions, requestedChildAgentOptions, providerRouteDefaults,
+          subagentProvider.prepareContinuable !== undefined,
+        )
         const started = await ctx.subagents.startActivation({
           provider: config.provider,
           label: args.description,
@@ -331,7 +344,7 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           signal: exec.signal,
           delivery: 'parent',
         })
-        return { kind: 'activation' as const, name: started.name }
+        return { kind: 'activation' as const, name: started.name, ...route === undefined ? {} : { route } }
       },
     })
     const disposeTool = ctx.effect(() => {

@@ -351,6 +351,7 @@
 
 .label,
 .secondaryLabel,
+.route,
 .summary {
   white-space: normal;
   overflow-wrap: anywhere;
@@ -370,11 +371,20 @@
   color: var(--dsw-alias-label-tertiary);
 }
 
+/* The child's platform and model on their own line, so a long generated title
+   on the line below cannot push the route out of the row. */
 .summary,
+.route,
 .metrics {
   color: var(--dsw-alias-label-tertiary);
   font-size: 10px;
   line-height: 15px;
+}
+
+/* The route carries the fact this catalog is opened to compare, so it sits a
+   tone brighter than the title and activity line below it. */
+.route {
+  color: var(--dsw-alias-label-secondary);
 }
 
 .metrics {

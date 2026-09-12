@@ -15,6 +15,7 @@ import { MockAdapter } from '../../../core/agent-loop/tests/mock-adapter.ts'
 import * as mock from './scripted-provider.ts'
 import * as tool from '../src/index.ts'
 import {
+  effectiveChildRoute,
   assertAllowedModelRoutes,
   assertAllowedModelSelection,
   preflightChildLlmRoute,
@@ -624,4 +625,16 @@ describe('dsh-tool-subagent model selection', () => {
     expect(text(result)).toContain('selected route unavailable')
     expect(starts).toBe(0)
   })
+})
+
+
+it('route metadata respects backend defaults and omits unknown external models', () => {
+  const parent = { provider: 'parent', model: 'parent-model' }
+  const defaults = { provider: 'sdk', model: 'sdk-model' }
+  expect(effectiveChildRoute(parent, undefined)).toEqual(parent)
+  expect(effectiveChildRoute(parent, undefined, defaults, false)).toEqual(defaults)
+  expect(effectiveChildRoute(parent, { provider: 'chosen', model: 'chosen-model' }, defaults, false))
+    .toEqual({ provider: 'chosen', model: 'chosen-model' })
+  expect(effectiveChildRoute(parent, undefined, undefined, false)).toBeUndefined()
+  expect(effectiveChildRoute(parent, { provider: 'partial' }, undefined, false)).toBeUndefined()
 })
