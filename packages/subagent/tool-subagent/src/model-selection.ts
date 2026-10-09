@@ -153,20 +153,21 @@ export function assertAllowedModelSelection(
 }
 
 /**
- * The exact route the child will run: request and config overrides merged, then
- * whatever the child inherits from its parent. This is the same resolution
- * {@link preflightChildLlmRoute} validates, reported so a reader of the parent
- * conversation can see which platform and model served a delegation.
+ * Resolve display metadata only from route values the backend accepts.
  * @param parentOptions - Current parent values the child inherits from.
  * @param requested - Per-child options after request/config merging.
+ * @param defaults - Route defaults published by the backend.
+ * @param inheritsParent - Whether the backend inherits missing parent route values.
  * @returns the effective route, or undefined when no layer supplies both halves.
  */
 export function effectiveChildRoute(
   parentOptions: AgentOptions,
   requested: AgentOptions | undefined,
+  defaults?: AgentOptions,
+  inheritsParent = true,
 ): AllowedModelRoute | undefined {
-  const provider = requested?.provider ?? parentOptions.provider
-  const model = requested?.model ?? parentOptions.model
+  const provider = requested?.provider ?? defaults?.provider ?? (inheritsParent ? parentOptions.provider : undefined)
+  const model = requested?.model ?? defaults?.model ?? (inheritsParent ? parentOptions.model : undefined)
   return provider === undefined || model === undefined ? undefined : { provider, model }
 }
 

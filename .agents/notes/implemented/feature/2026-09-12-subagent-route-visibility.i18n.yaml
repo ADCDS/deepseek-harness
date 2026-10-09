@@ -1,6 +1,19 @@
-# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
-# side as of the last confirmed-consistent state. Both languages carry equal authority;
-# after editing either side, bring the other along and re-record with:
+# Bilingual-pair consistency record for 2026-09-12-subagent-route-visibility.md (docs/i18n/README.md): per heading
+# section, a hash of its English and Chinese blocks outside code blocks and generated regions.
+# After editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-12-subagent-route-visibility.md
-2026-09-12-subagent-route-visibility.md: 4404999faa86219c09264a6b473452f5c5b0f181
-2026-09-12-subagent-route-visibility.zh.md: e65465441e01601b52a0e72ee8bd507b97606218
+/agent-note-subagent-route-visibility:
+  en: 1bc37b9b5ab5c447
+  zh: 63d0deea6e3b435a
+/agent-note-subagent-route-visibility/problem:
+  en: f6f59faf8bc667ba
+  zh: e40f0c065234a468
+/agent-note-subagent-route-visibility/decision:
+  en: 7f80695ad2152f1c
+  zh: 4cd18036b9c0627e
+/agent-note-subagent-route-visibility/alternatives-considered:
+  en: edee1f806a287a2e
+  zh: 5ed0faf8554c3369
+/agent-note-subagent-route-visibility/consequences:
+  en: 489c9cbe60830136
+  zh: 98fd30beace4f5f8
