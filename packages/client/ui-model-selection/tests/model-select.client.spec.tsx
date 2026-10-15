@@ -926,6 +926,6 @@ it('reports a fixed child route by raw IDs and hides a missing route', () => {
   const chip = screen.getByRole('button')
   expect(chip.textContent).toContain('child-provider/unlisted-child')
   expect(chip.hasAttribute('disabled')).toBe(true)
-  act(() => { directory.update(snapshot => { snapshot.current = null }) })
+  act(() => { directory.update((snapshot) => { snapshot.current = null }) })
   expect(view.container.textContent).toBe('')
 })
