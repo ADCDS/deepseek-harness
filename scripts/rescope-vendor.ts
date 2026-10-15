@@ -98,6 +98,22 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'apps/cli/tests/profiles/web/tests/fixtures/creator-plugin-manager.mjs', upstream: ['cordis'] },
   { file: 'apps/web/tests/agent-preset-authoring.e2e.ts', upstream: ['cordis'] },
   { file: 'packages/preset/agent-preset-registry/tests/session.spec.ts', upstream: ['cordis'] },
+  { file: 'apps/cli/tests/optional-bundle-transitions.e2e.ts', upstream: ['cordis'] },
+  { file: 'apps/web/tests/agent-preset-selection.e2e.ts', upstream: ['cordis'] },
+  { file: 'apps/web/tests/developer-tools-settings.e2e.ts', upstream: ['cordis'] },
+  { file: 'docs/subsystems/schedule.md', upstream: ['cordis'] },
+  { file: 'docs/subsystems/schedule.zh.md', upstream: ['cordis'] },
+  { file: 'docs/upgrade-guide/v0.2.0-rc.2/schedule-bundle-retired/guide.md', upstream: ['cordis'] },
+  { file: 'docs/upgrade-guide/v0.2.0-rc.2/schedule-bundle-retired/guide.zh.md', upstream: ['cordis'] },
+  { file: 'docs/upgrade-guide/v0.2.1-alpha.1/subagent-preset-composition/guide.md', upstream: ['cordis'] },
+  { file: 'docs/upgrade-guide/v0.2.1-alpha.1/subagent-preset-composition/guide.zh.md', upstream: ['cordis'] },
+  { file: 'docs/user/guide/schedule.md', upstream: ['cordis'] },
+  { file: 'docs/user/guide/schedule.zh.md', upstream: ['cordis'] },
+  { file: 'packages/bundle/web-app/cordis.patch.yml', upstream: ['cordis'] },
+  { file: 'packages/client/ui-agent-preset/src/client/CreatePluginMenuItem.tsx', upstream: ['cordis'] },
+  { file: 'packages/client/ui-agent-preset/tests/components.client.spec.tsx', upstream: ['cordis'] },
+  { file: 'packages/client/ui-agent-preset/tests/create-plugin-menu-item.client.spec.tsx', upstream: ['cordis'] },
+  { file: 'packages/client/ui-agent-preset/tests/section-store.client.spec.ts', upstream: ['cordis'] },
   // The preset-roster loop names the `cordis` preset id, not a package.
   { file: 'apps/cli/tests/windows-shell.spec.ts', upstream: ['cordis'] },
   // GROUP_ORDER holds `packages/<group>/` directory names, not package names.
@@ -124,6 +140,9 @@ const GENERIC_SKIPS: readonly GenericSkip[] = [
   { file: 'packages/extensions/tool-cordis/src/providers.ts', upstream: ['cordis'] },
   { file: 'packages/extensions/ui-cordis/src/client/index.ts', upstream: ['cordis'] },
   { file: 'packages/extensions/ui-cordis/src/client/inventory.ts', upstream: ['cordis'] },
+  { file: 'packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts', upstream: ['cordis'] },
+  { file: 'snapshots/session/cordis-inspect-liveness/client-fixture.mjs', upstream: ['cordis'] },
+  { file: 'snapshots/session/cordis-inspect-timeout/client-fixture.mjs', upstream: ['cordis'] },
   // `cordis/tree` is an Inspector observation topic, not a package subpath.
   { file: 'packages/experimental/inspector/src/shared/bridge/messages/cordis.ts', upstream: ['cordis'] },
   { file: 'packages/experimental/inspector/tests/cordis-query.host.spec.ts', upstream: ['cordis'] },
@@ -170,6 +189,41 @@ const POSTCONDITIONS: readonly PostCondition[] = [
  * quote a neighbouring line the generic pass would rewrite.
  */
 const EXACT_EDITS: readonly ExactEdit[] = [
+  {
+    id: 'optional-bundle-context-import',
+    file: 'apps/cli/tests/optional-bundle-transitions.e2e.ts',
+    find: "import type { Context } from 'cordis'",
+    replace: "import type { Context } from '@deepseek-ai/cordis'",
+    expect: 1,
+  },
+  {
+    id: 'inspect-registry-context-import',
+    file: 'packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts',
+    find: "import { Context } from 'cordis'",
+    replace: "import { Context } from '@deepseek-ai/cordis'",
+    expect: 1,
+  },
+  {
+    id: 'inspect-registry-fiber-import',
+    file: 'packages/extensions/cordis-host-runner/tests/inspect-registry.spec.ts',
+    find: "import type { Fiber } from 'cordis'",
+    replace: "import type { Fiber } from '@deepseek-ai/cordis'",
+    expect: 1,
+  },
+  {
+    id: 'inspect-liveness-context-type',
+    file: 'snapshots/session/cordis-inspect-liveness/client-fixture.mjs',
+    find: "import('cordis').Context",
+    replace: "import('@deepseek-ai/cordis').Context",
+    expect: 1,
+  },
+  {
+    id: 'inspect-timeout-context-type',
+    file: 'snapshots/session/cordis-inspect-timeout/client-fixture.mjs',
+    find: "import('cordis').Context",
+    replace: "import('@deepseek-ai/cordis').Context",
+    expect: 2,
+  },
   {
     id: 'loader-diff-schemastery-import',
     file: 'vendor/loader/src/config/diff.ts',
