@@ -140,6 +140,36 @@ describe('maintained repository reference policy', () => {
     expect(scanRepositoryReferences(fixture.root)).toEqual([])
   })
 
+  it('accepts uv artifact byte counts while rejecting commit references in the same lockfile', (test) => {
+    const fixture = repository(test)
+    let commit = ''
+    for (let index = 0; commit === ''; index += 1) {
+      const body = `tree ${fixture.tree}\nauthor T <t@example.invalid> 0 +0000\ncommitter T <t@example.invalid> 0 +0000\n\nsize ${String(index)}\n`
+      const algorithm = fixture.tree.length === 64 ? 'sha256' : 'sha1'
+      const digest = createHash(algorithm).update(`commit ${String(Buffer.byteLength(body))}\0${body}`).digest('hex')
+      if (/^[1-9][0-9]{6}/.test(digest)) commit = fixture.git(['hash-object', '-t', 'commit', '-w', '--stdin'], body)
+    }
+    const prefix = commit.slice(0, 7)
+    const artifact = `{ url = "https://example.invalid/package.whl", size = ${prefix} },`
+    fixture.write('python/sdk/uv.lock', artifact)
+    expect(scanRepositoryReferences(fixture.root)).toEqual([])
+
+    fixture.write('python/sdk/uv.lock', `${artifact}\n# commit ${prefix}\n`)
+    expect(scanRepositoryReferences(fixture.root)).toEqual([
+      { file: 'python/sdk/uv.lock', line: 2, kind: 'commit-hash' },
+    ])
+    fixture.write('python/sdk/uv.lock', `{ url = "https://example.invalid/commit/${prefix}", size = ${prefix} },`)
+    expect(scanRepositoryReferences(fixture.root)).toEqual([
+      { file: 'python/sdk/uv.lock', line: 1, kind: 'commit-hash' },
+    ])
+    fixture.write('python/sdk/uv.lock', `{ note = "quoted, size = ${prefix},", size = ${prefix} },`)
+    expect(scanRepositoryReferences(fixture.root)).toHaveLength(1)
+    fixture.write('python/sdk/uv.lock', `# historical commit, size = ${prefix},`)
+    expect(scanRepositoryReferences(fixture.root)).toHaveLength(1)
+    fixture.write('tracked.md', `size = ${prefix},`)
+    expect(scanRepositoryReferences(fixture.root)).toHaveLength(2)
+  })
+
   it('accepts a prefix that two available commits share and rejects a longer unique prefix', (test) => {
     const fixture = repository(test)
     const [first, second] = collidingCommitBodies(fixture.tree, 7).map(body =>
