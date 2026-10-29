@@ -84,6 +84,8 @@ function writeFixture(): string {
   // `*` is covered by the reference unit test; Windows cannot create it on disk.
   writeFile(join(assets, "whale(2x)!'.png"), PNG)
   writeFile(join(assets, 'notes.txt'), 'text\n')
+  // Dots inside a name are not a `..` segment.
+  writeFile(join(assets, 'v1..2.png'), PNG)
   writeFile(join(assets, 'folder.png', 'inner.png'), PNG)
   writeFile(join(assets, 'private', 'hidden.png'), PNG)
   // `a#b.png` resolves here because Node reads `#` in the subpath as a fragment.
@@ -218,6 +220,8 @@ describe('package asset route', () => {
     // The reference encodes the characters an unquoted CSS url() rejects; the route decodes them back.
     const special = await both(assetUrl(ASSETS_ID, "whale(2x)!'.png"))
     expect([special.status, special.headers.etag, special.body]).toEqual([200, '"whale%282x%29%21%27.png"', PNG])
+    const dotted = await both(assetUrl(ASSETS_ID, 'v1..2.png'))
+    expect([dotted.status, dotted.body]).toEqual([200, PNG])
     // The revision lives in the emitted name; a query does not select content.
     expect((await both(`${assetUrl(ASSETS_ID, 'photo.png')}?rev=anything`)).body).toEqual(PNG)
   })
@@ -301,6 +305,7 @@ describe('package asset route', () => {
     ['`..` leaving the asset prefix', `${base}/../../secret.png`],
     ['`%2e%2e` leaving the asset prefix', `${base}/%2e%2e/%2e%2e/secret.png`],
     ['an encoded `..` path', `${base}/..%2f..%2fsecret.png`],
+    ['an encoded backslash `..` path', `${base}/..%5c..%5csecret.png`],
     ['an empty asset path', `${base}/`],
     ['a malformed percent-escape', `${base}/photo%zz.png`],
     ['a decoded `%`', `${base}/100%25.png`],
