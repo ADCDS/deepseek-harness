@@ -339,6 +339,18 @@ it('imports the removed settings.yaml into the profile once and keeps rejected s
   expect(blocked.agentDefaultModel.currentSelection().model).toBe('legacy')
 })
 
+it('imports a settings.yaml section whose entry was renamed into the entry that now owns it', async () => {
+  const { ctx, home, profile, start } = await fixture({ entries: [{ id: 'subagent-model-selection-settings', config: { ordinary: 'routes' } }] })
+  await ctx.fiber.dispose()
+  writeFileSync(join(home, 'settings.yaml'), 'subagent-model-selection:\n  count: 3\n')
+  const restored = await start()
+  await vi.waitFor(() => {
+    expect(restored.settings.describe().find(view => view.ns === 'subagent-model-selection-settings')!.value).toEqual({ count: 3, list: [] })
+  })
+  const rows = parse(readFileSync(profile.patchPath, 'utf8')) as { id?: string; config?: { count?: number } }[]
+  expect(rows.find(row => row.id === 'subagent-model-selection-settings')?.config?.count).toBe(3)
+})
+
 it('describes an entry whose required field only the profile supplies, and reports a failed refresh instead of crashing', async () => {
   const { ctx, profile, start } = await fixture({
     schema: z.object({ ordinary: z.string(), required: z.string().required(), count: z.number().default(2).volatile() }),
