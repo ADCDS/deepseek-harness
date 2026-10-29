@@ -8,7 +8,7 @@
 import { assertNever, deepFreeze, snapshotJsonValue } from '@deepseek-ai/dsh-util-values'
 import { BlockAssembler } from './assembler.ts'
 import type { ToolCallId } from './brand.ts'
-import type { ContentBlock, StreamChunk } from './types.ts'
+import type { ContentBlock, ServedBy, StreamChunk } from './types.ts'
 
 /** One model chunk paired with its original Session timestamp. */
 export interface TimedStreamChunk {
@@ -338,6 +338,26 @@ export function assistantStreamFirstTokenTime(stream: readonly AssistantStreamRe
     if (time !== undefined) return time
   }
   return undefined
+}
+
+/**
+ * The model that actually answered, from the stream's `finish` record, when
+ * the adapter reported a reroute ({@link ServedBy}). Records come back from
+ * durable storage, so the shape is checked rather than trusted.
+ * @param stream - compact records from one durable Assistant settlement.
+ * @returns the serving model and reroute facts, or undefined when none was reported.
+ */
+export function assistantStreamServedBy(stream: readonly AssistantStreamRecord[]): ServedBy | undefined {
+  const servedBy: unknown = lastAssistantStreamChunk(stream, 'finish')?.servedBy
+  if (typeof servedBy !== 'object' || servedBy === null) return undefined
+  const { model, reason, from, category } = servedBy as Record<string, unknown>
+  if (typeof model !== 'string' || model.length === 0) return undefined
+  return {
+    model,
+    ...typeof reason === 'string' && reason.length > 0 ? { reason } : {},
+    ...typeof from === 'string' && from.length > 0 ? { from } : {},
+    ...typeof category === 'string' && category.length > 0 ? { category } : {},
+  }
 }
 
 /**

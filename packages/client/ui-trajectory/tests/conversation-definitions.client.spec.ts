@@ -658,6 +658,45 @@ describe('Trajectory conversation Definitions', () => {
     }])
   })
 
+  it('reports the model that answered a rerouted request and keeps the requested one on the message', () => {
+    const served = { model: 'claude-opus-4-8', reason: 'refusal-fallback', from: 'claude-opus-5-5', category: 'cyber' }
+    const current = snapshot(assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      at(2, 'step/start', { turn: 1, step: 1 }),
+      at(3, 'assistant/message', {
+        turn: 1,
+        step: 1,
+        message: assistantMessage('served-message', 'answer'),
+        stream: [{ type: 'chunk', time: 1_700_000_000_003, chunk: { type: 'finish', reason: { kind: 'stop' }, servedBy: served } }],
+      }),
+      at(4, 'step/end', { turn: 1, step: 1 }),
+      at(5, 'turn/end', { turn: 1, reason: { kind: 'completed' } }),
+    ]))
+
+    expect(current.eventNodes).toMatchObject([{
+      kind: 'assistant',
+      messageId: 'served-message',
+      servedBy: served,
+      providerMetadata: { provider: 'test', model: 'claude-opus-4-8' },
+    }])
+    expect(current.requests).toMatchObject([{
+      purpose: 'assistant',
+      resultSeq: 3,
+      providerMetadata: { provider: 'test', model: 'claude-opus-4-8' },
+    }])
+    // Without a report the message's own identity stands and no servedBy appears.
+    const plain = snapshot(assembler([
+      at(1, 'turn/start', { turn: 1 }),
+      at(2, 'step/start', { turn: 1, step: 1 }),
+      at(3, 'assistant/message', { turn: 1, step: 1, message: assistantMessage('plain-message', 'answer') }),
+      at(4, 'step/end', { turn: 1, step: 1 }),
+      at(5, 'turn/end', { turn: 1, reason: { kind: 'completed' } }),
+    ]))
+    const node = plain.eventNodes.find(entry => entry.kind === 'assistant')
+    expect(node).toMatchObject({ providerMetadata: { provider: 'test', model: 'test' } })
+    expect(node).not.toHaveProperty('servedBy')
+  })
+
   it('keeps parallel roots, raw Tool facts, and mixed-ID PTC dispatch results', () => {
     const error = {
       name: 'AutoReviewDeniedError',

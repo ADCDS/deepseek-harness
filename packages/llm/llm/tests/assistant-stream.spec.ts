@@ -8,6 +8,7 @@ import {
   assistantStreamFirstTokenTime,
   assistantStreamHasVisibleContent,
   assistantStreamHasVisibleText,
+  assistantStreamServedBy,
   chunkHasVisibleText,
   expandAssistantStream,
   isTokenDelta,
@@ -393,6 +394,20 @@ describe('compact stream readers', () => {
     expect(assistantStreamChunks(stream, 'block-end').map(chunk => chunk.index)).toStrictEqual([0, 1])
     expect(assistantStreamChunks(stream, 'usage').map(chunk => chunk.usage)).toStrictEqual([usage, laterUsage])
     expect(joinAssistantStreamText(stream)).toBe('\nanswer')
+  })
+
+  it('reads the serving model a rerouted finish reported, and nothing else', () => {
+    const finished = (chunk: StreamChunk): readonly AssistantStreamRecord[] => [{ type: 'chunk', time: 100, chunk }]
+    const served = { model: 'claude-opus-4-8', reason: 'refusal-fallback', from: 'claude-opus-5-5', category: 'cyber' }
+    expect(assistantStreamServedBy(finished({ type: 'finish', reason: { kind: 'stop' }, servedBy: served }))).toStrictEqual(served)
+    // Optional facts are optional; unknown keys and empty strings are dropped.
+    const sparse = JSON.parse('{"type":"finish","reason":{"kind":"stop"},"servedBy":{"model":"m2","from":"","extra":1}}') as StreamChunk
+    expect(assistantStreamServedBy(finished(sparse))).toStrictEqual({ model: 'm2' })
+    // No report, a malformed report, and a stream without a finish all read as absent.
+    expect(assistantStreamServedBy(finished({ type: 'finish', reason: { kind: 'stop' } }))).toBeUndefined()
+    const malformed = JSON.parse('{"type":"finish","reason":{"kind":"stop"},"servedBy":{"model":42}}') as StreamChunk
+    expect(assistantStreamServedBy(finished(malformed))).toBeUndefined()
+    expect(assistantStreamServedBy([])).toBeUndefined()
   })
 
   it('reports absence on empty, whitespace-only, and Tool-call-only streams', () => {

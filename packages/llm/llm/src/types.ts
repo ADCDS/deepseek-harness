@@ -505,7 +505,26 @@ export type StreamChunk =
     reason: FinishReason
     /** Replay metadata for a successful response; see {@link ReplayEnvelope}. */
     replayState?: ReplayEnvelope
+    /** Set when another model than the requested one answered; see {@link ServedBy}. */
+    servedBy?: ServedBy
   }
+
+/**
+ * The model that actually answered a request when the provider rerouted it,
+ * for example Anthropic's server-side fallback after a safety-classifier
+ * decline. Reported on the successful `finish` chunk; the requested model stays
+ * the message's own provider/model identity.
+ */
+export interface ServedBy {
+  /** The model that produced the response. */
+  model: string
+  /** Why the provider rerouted, as the adapter names it (e.g. `refusal-fallback`). */
+  reason?: string
+  /** The model that declined or was skipped, when the adapter knows it. */
+  from?: string
+  /** The provider's category for the reroute (e.g. a refusal policy area). */
+  category?: string
+}
 
 /**
  * JSON-schema description of a tool, as sent to the model.

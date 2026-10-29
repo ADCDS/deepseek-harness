@@ -4,7 +4,7 @@
 
 import type { CommandId } from '@deepseek-ai/dsh-commands/brand'
 import type { MessageId } from '@deepseek-ai/dsh-llm/brand'
-import type { ContentBlock } from '@deepseek-ai/dsh-llm/types'
+import type { ContentBlock, ServedBy } from '@deepseek-ai/dsh-llm/types'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import type { LlmRetryEventData } from '@deepseek-ai/dsh-llm-retry/types'
 import type { TodoItem } from '@deepseek-ai/dsh-tool-todo/client'
@@ -77,6 +77,11 @@ export interface AssistantMessageNode {
   blocks: readonly AssistantBlock[]
   usage?: unknown
   providerMetadata?: AssistantProviderMetadataView
+  /**
+   * The model that actually answered when the provider rerouted the request
+   * (e.g. a safety-classifier fallback); `providerMetadata` then names it too.
+   */
+  servedBy?: ServedBy
   requestConfig?: AssistantRequestConfig
   /** Timing derived from the recorded step/chunk/message event sequence. */
   timing?: AssistantTiming

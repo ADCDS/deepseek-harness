@@ -5,7 +5,7 @@ import type {
   RequestView,
 } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type { StreamChunk } from '@deepseek-ai/dsh-llm'
-import { assistantStreamFirstTokenTime } from '@deepseek-ai/dsh-llm/assistant-stream'
+import { assistantStreamFirstTokenTime, assistantStreamServedBy } from '@deepseek-ai/dsh-llm/assistant-stream'
 import type { SessionEvent } from '@deepseek-ai/dsh-session/types'
 import { trajectoryNode } from './trajectory-definition-common.ts'
 import type { TrajectoryPartialAssistant } from './trajectory-contract.ts'
@@ -255,6 +255,8 @@ function finalNode(
   const final = state.final
   if (final?.event.type === 'assistant/message') {
     const event = final.event
+    // A rerouted request reports the model that answered; the message keeps the requested one.
+    const servedBy = assistantStreamServedBy(event.data.stream)
     return {
       kind: 'assistant',
       seq: event.seq,
@@ -266,8 +268,9 @@ function finalNode(
       usage: event.data.usage,
       providerMetadata: {
         provider: event.data.message.source.provider,
-        model: event.data.message.source.model,
+        model: servedBy?.model ?? event.data.message.source.model,
       },
+      ...(servedBy === undefined ? {} : { servedBy }),
       timing: {
         stepStartTime: state.started ? state.startTime : null,
         firstTokenTime: state.firstTokenTime ?? null,
