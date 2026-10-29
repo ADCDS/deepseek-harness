@@ -5,7 +5,7 @@ import type { ReactNode } from 'react'
 import { JsonBlock, MarkdownText } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { MarkdownFileMentions, MarkdownPathImages } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ChatNodeOwnerProps, ChatViewSlotProps, UseDisclosure, UsePresentation, UseGroupAction } from '../contract/slots.ts'
-import type { AssistantBlock } from '../contract/snapshot.ts'
+import type { AssistantBlock, AssistantMessageNode } from '../contract/snapshot.ts'
 import { markdownLabels } from '../markdown-labels.ts'
 import { ReasoningRow } from './ReasoningRow.tsx'
 import css from './AssistantMarkdown.module.css'
@@ -40,6 +40,8 @@ export interface AssistantMarkdownProps extends
   textInteractionSource?: boolean
   /** Frozen partial of an aborted turn: rendered with a stopped marker. */
   interrupted?: boolean | undefined
+  /** The model that answered when the provider rerouted the request: rendered as a note. */
+  servedBy?: AssistantMessageNode['servedBy']
   /** Hide reasoning that belongs to the Turn-level process disclosure. */
   reasoningHidden?: boolean | undefined
   /** Process hiding bound by the node slot to its current viewport. */
@@ -56,7 +58,7 @@ export interface AssistantMarkdownProps extends
 
 /** Renders non-blank reasoning blocks as independent disclosures alongside the response. */
 export const AssistantMarkdown = memo(function AssistantMarkdown({
-  blocks, streaming, textInteractionSource = false, interrupted, loadImage, groupPart, useDisclosure,
+  blocks, streaming, textInteractionSource = false, interrupted, servedBy, loadImage, groupPart, useDisclosure,
   reasoningHidden = false, usePresentation, revealProcess, mentions, renderSlot, useGroupAction, t,
 }: AssistantMarkdownProps) {
   // Stable per locale revision (t identity changes on switch): a fresh object
@@ -152,6 +154,14 @@ export const AssistantMarkdown = memo(function AssistantMarkdown({
         {interrupted && (groupPart === undefined || groupPart === 'response'
           || !blocks.some(block => block.kind !== 'reasoning' && block.kind !== 'tool-call'))
           && <span className={css.stopped}>{t('message.stopped')}</span>}
+        {servedBy !== undefined && !streaming && (groupPart === undefined || groupPart === 'response')
+          && (
+            <span className={css.servedBy} title={servedBy.category}>
+              {servedBy.from === undefined
+                ? t('message.servedBy', { model: servedBy.model })
+                : t('message.servedByFallback', { model: servedBy.model, from: servedBy.from })}
+            </span>
+          )}
       </div>
     </div>
   )
