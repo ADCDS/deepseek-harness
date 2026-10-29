@@ -1214,8 +1214,12 @@ export class ClientModuleRegistry extends Service {
     if (record === undefined || assetPath === '') return { status: 404 }
     let file: string
     try {
+      const subpath = decodeURIComponent(assetPath)
+      // Export resolution rejects `.`/`..` only because every served row declares an exports map
+      // (resolveMeta); without one Node joins the subpath and could leave the package.
+      if (subpath.split(/[/\\]/).some(segment => segment === '.' || segment === '..')) return { status: 404 }
       file = createRequire(record.meta.manifestPath)
-        .resolve(`${record.entry.id}/${PACKAGE_ASSET_SEGMENT}/${decodeURIComponent(assetPath)}`)
+        .resolve(`${record.entry.id}/${PACKAGE_ASSET_SEGMENT}/${subpath}`)
     } catch {
       // Unresolvable or malformed paths name no asset.
       return { status: 404 }
