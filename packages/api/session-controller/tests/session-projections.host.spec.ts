@@ -209,6 +209,7 @@ describe('session.history projections block', () => {
     expect(ctx.sessionProjections.snapshot(session).values.modelSelection).toEqual({
       lastUsed: { provider: 'p', model: 'used' },
       next: selected,
+      lastServed: null,
     })
 
     session.append('request/header', {
@@ -217,6 +218,7 @@ describe('session.history projections block', () => {
     expect(ctx.sessionProjections.snapshot(session).values.modelSelection).toEqual({
       lastUsed: selected,
       next: selected,
+      lastServed: null,
     })
   })
 

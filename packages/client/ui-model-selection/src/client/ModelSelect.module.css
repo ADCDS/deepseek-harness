@@ -1,6 +1,19 @@
 .root {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   min-width: 0;
+}
+
+/* The fallback indicator sits beside the trigger: the picker keeps the
+   requested model, this names the model actually answering. Amber `warning`
+   tone (Tag) signals a routing change without reading as a failure. */
+.servingBadge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  cursor: default;
 }
 
 /* Figma 313:14108 ToggleButton: 13/20 regular secondary label, 4px gap,

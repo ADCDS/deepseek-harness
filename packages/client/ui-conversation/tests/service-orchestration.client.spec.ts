@@ -1069,7 +1069,7 @@ it('captures run mode and queue intent at submission before later projection cha
   try {
     await b.runtime.sessions.setProjection('s1', 'plan', { active: true, pending: false })
     await b.runtime.sessions.setProjection('s1', 'goal', { goal: { phase: 'active' } })
-    await b.runtime.sessions.setProjection('s1', 'modelSelection', { next: { provider: 'fixture', model: 'model', reasoningEffort: 'high' }, lastUsed: null })
+    await b.runtime.sessions.setProjection('s1', 'modelSelection', { next: { provider: 'fixture', model: 'model', reasoningEffort: 'high' }, lastUsed: null, lastServed: null })
     await b.runtime.sessions.updateSessionSnapshot('s1', (state) => { state.running = true; state.blank = false })
     b.shell.setDraft('private prompt')
     b.shell.submit('queue', 'click')
@@ -1178,7 +1178,7 @@ it('reports an active goal and a model without an explicit effort', async () => 
   b.runtime.ctx.provide('productAnalytics', { enabled: true, track } as never)
   try {
     await b.runtime.sessions.setProjection('s1', 'goal', { goal: { phase: 'active' } })
-    await b.runtime.sessions.setProjection('s1', 'modelSelection', { next: null, lastUsed: { provider: 'fixture', model: 'model' } })
+    await b.runtime.sessions.setProjection('s1', 'modelSelection', { next: null, lastUsed: { provider: 'fixture', model: 'model' }, lastServed: null })
     await b.runtime.sessions.updateSessionSnapshot('s1', (state) => { state.running = false; state.blank = false })
     b.shell.setDraft('message')
     b.shell.submit('queue', 'click')

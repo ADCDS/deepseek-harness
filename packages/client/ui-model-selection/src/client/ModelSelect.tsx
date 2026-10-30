@@ -54,6 +54,12 @@ interface EffortChoice {
   label: string
 }
 
+/** Stable no-reroute face for a seat mounted without a serving projection, so the hook never resubscribes to a changing stub. */
+const NO_SERVING: NonNullable<ModelSelectInjected['servingModel']> = {
+  subscribe: () => () => { /* nothing to observe */ },
+  getSnapshot: () => undefined,
+}
+
 /**
  * Render the composer model seat.
  * @param props - owner share (locked) + injected face (shared directory
@@ -61,13 +67,18 @@ interface EffortChoice {
  * @returns the trigger and, while open, the two-level menu.
  */
 export function ModelSelect(
-  { locked, available, directory, load, select, resolveText, t, renderSlot }:
+  { locked, available, directory, servingModel, load, select, resolveText, t, renderSlot }:
   ModelSelectInjected & Pick<PropsRuntime<'conversation.input.model'>, 'locked'> & PropsLocale<'model'>
     & Omit<PropsRenderSlots<'conversation.input.model.label' | 'conversation.input.model.options'>, 'SessionProvider'>,
 ) {
   const state = useSyncExternalStore(
     fn => directory.subscribe(fn),
     () => directory.getSnapshot(),
+  )
+  const servingStore = servingModel ?? NO_SERVING
+  const serving = useSyncExternalStore(
+    fn => servingStore.subscribe(fn),
+    () => servingStore.getSnapshot(),
   )
   const [open, setOpen] = useState(false)
   const [pane, setPane] = useState<Pane>('root')
@@ -135,6 +146,19 @@ export function ModelSelect(
       : effectiveEffort === undefined
         ? t('effort.providerDefault')
         : reasoning.efforts.find(level => level.id === effectiveEffort)?.name ?? effectiveEffort
+  // The model a provider rerouted the latest reply to (server-side refusal
+  // fallback), named beside the unchanged selection. Hidden once the selection
+  // catches up to it or routing returns to the requested model. Names resolve
+  // through the catalog, falling back to the raw id when it is not listed.
+  const servedReroute = serving?.lastServed ?? null
+  const servingBadge = servedReroute !== null && servedReroute.from !== undefined
+      && servedReroute.model !== state.current?.model
+    ? {
+      model: choices.find(choice => choice.selection.model === servedReroute.model)?.model.name ?? servedReroute.model,
+      from: choices.find(choice => choice.selection.model === servedReroute.from)?.model.name ?? servedReroute.from,
+      category: servedReroute.category,
+    }
+    : undefined
   const effortChoices = useMemo<readonly EffortChoice[]>(() => reasoning === undefined
     ? []
     : [
@@ -509,6 +533,18 @@ export function ModelSelect(
           ? <StateDot state="ongoing" />
           : <IconChevronDownOutlineRegular className={clsx(css.chevron, open && css.chevronOpen)} />}
       </button>
+
+      {servingBadge !== undefined && (
+        <span
+          className={css.servingBadge}
+          title={servingBadge.category === undefined
+            ? t('serving.detailPlain', { from: servingBadge.from, model: servingBadge.model })
+            : t('serving.detail', { from: servingBadge.from, model: servingBadge.model, category: servingBadge.category })}
+          aria-label={t('serving.aria', { from: servingBadge.from, model: servingBadge.model })}
+        >
+          <Tag tone="warning">{`→ ${servingBadge.model}`}</Tag>
+        </span>
+      )}
 
       {/* Portaled to body (Menu primitive's portal mode) so the sidebar and
           column overflow clips cannot crop the card; synthetic events still

@@ -7,7 +7,7 @@ import {
   type AgentOptions,
   type ModelSelection,
 } from '@deepseek-ai/dsh-agent'
-import { createUserMessage, ReasoningEffortId, type UserMessage } from '@deepseek-ai/dsh-llm'
+import { createAssistantMessage, createUserMessage, ReasoningEffortId, type ServedBy, type UserMessage } from '@deepseek-ai/dsh-llm'
 import SessionStore, { Session, SessionId, type EpochHeader } from '@deepseek-ai/dsh-session'
 import SessionProjectionRegistry from '@deepseek-ai/dsh-session-projection'
 import { AgentModel, modelSelectionProjectionDefinition } from '../src/model-selection.ts'
@@ -74,7 +74,7 @@ describe('Session model selection', () => {
     expect(h.current()).toBeUndefined()
     h.agent.options.model = 'a0'
     expect(h.current()).toEqual(INITIAL)
-    expect(h.ctx.sessionProjections.snapshot(h.session).values.modelSelection).toEqual({ lastUsed: null, next: null })
+    expect(h.ctx.sessionProjections.snapshot(h.session).values.modelSelection).toEqual({ lastUsed: null, next: null, lastServed: null })
 
     h.record(INITIAL)
     expect(h.session.snapshotEvents()).toMatchObject([{ type: 'model/selection', data: INITIAL }])
@@ -108,7 +108,7 @@ describe('Session model selection', () => {
     const restoredModel = new AgentModel(() => projection.stateOf(restored), restored, {})
     expect(restoredModel.current()).toEqual(selected)
     h.header(selected)
-    expect(h.state()).toEqual({ lastUsed: selected, pending: null })
+    expect(h.state()).toEqual({ lastUsed: selected, pending: null, lastServed: null })
     expect(h.current()).toEqual(selected)
     const state = h.state()
     h.header(selected)
@@ -120,9 +120,10 @@ describe('Session model selection', () => {
     const selected = { provider: 'beta', model: 'b1' }
     h.record(selected)
     h.header({ ...selected, reasoningEffort: ReasoningEffortId('high') }, { reasoningEffort: true })
-    expect(h.state()).toEqual({ lastUsed: selected, pending: null })
+    expect(h.state()).toEqual({ lastUsed: selected, pending: null, lastServed: null })
     expect(h.current()).toEqual(selected)
-    expect(h.ctx.sessionProjections.snapshot(h.session).values.modelSelection).toEqual({ lastUsed: selected, next: selected })
+    expect(h.ctx.sessionProjections.snapshot(h.session).values.modelSelection)
+      .toEqual({ lastUsed: selected, next: selected, lastServed: null })
     h.header({ ...selected, reasoningEffort: ReasoningEffortId('low') })
     expect(h.current()).toEqual({ ...selected, reasoningEffort: 'low' })
   })
@@ -145,6 +146,42 @@ describe('Session model selection', () => {
     expect(h.session.snapshotEvents()).toHaveLength(2)
     h.record(INITIAL)
     expect(h.session.snapshotEvents()).toHaveLength(2)
+  })
+})
+
+describe('server-side fallback tracking', () => {
+  const reply = (h: Awaited<ReturnType<typeof harness>>, servedBy: ServedBy | undefined) =>
+    h.session.append('assistant/message', {
+      turn: 1,
+      step: 1,
+      message: createAssistantMessage({ content: [{ type: 'text', text: 'ok' }], source: { provider: 'alpha', model: 'a0' } }),
+      stream: [{
+        type: 'chunk',
+        time: 1,
+        chunk: { type: 'finish', reason: { kind: 'stop' }, ...servedBy === undefined ? {} : { servedBy } },
+      }],
+    }, { surfaceOp: 'append' })
+
+  it('names the serving model when the latest reply reports a reroute', async () => {
+    const h = await harness()
+    const servedBy = { model: 'claude-opus-4-8', from: 'claude-opus-5-5', reason: 'refusal-fallback', category: 'cyber' }
+    reply(h, servedBy)
+    expect(h.state()?.lastServed).toEqual(servedBy)
+    expect(h.ctx.sessionProjections.snapshot(h.session).values.modelSelection?.lastServed).toEqual(servedBy)
+  })
+
+  it('clears once a later reply comes back on the requested model', async () => {
+    const h = await harness()
+    reply(h, { model: 'claude-opus-4-8', from: 'claude-opus-5-5', reason: 'refusal-fallback' })
+    expect(h.state()?.lastServed).not.toBeNull()
+    reply(h, undefined)
+    expect(h.state()?.lastServed).toBeNull()
+  })
+
+  it('ignores a servedBy that names no declined model', async () => {
+    const h = await harness()
+    reply(h, { model: 'claude-opus-5-5', reason: 'sticky' })
+    expect(h.state()?.lastServed).toBeNull()
   })
 })
 

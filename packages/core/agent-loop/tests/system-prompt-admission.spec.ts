@@ -520,7 +520,7 @@ describe('prepared-route prompt admission', () => {
     await send(h.agent, 'use the pending choice')
     expect(h.plain.requests[0]).toMatchObject({ provider: 'plain', model: 'next-model' })
     expect(h.ctx.sessionProjections.snapshot(h.agent.session).values.modelSelection)
-      .toEqual({ lastUsed: { provider: 'plain', model: 'next-model' }, next: { provider: 'plain', model: 'next-model' } })
+      .toEqual({ lastUsed: { provider: 'plain', model: 'next-model' }, next: { provider: 'plain', model: 'next-model' }, lastServed: null })
   })
 
   it('keeps generic config changes and concurrent selection on the same prepared route', async () => {
