@@ -36,3 +36,11 @@
   font-size: 12px;
   line-height: 16px;
 }
+
+/* The model that actually answered when a provider rerouted the child's reply
+   (server-side refusal fallback), named below the fixed route it replaced. */
+.servedBy {
+  color: var(--dsw-alias-label-secondary);
+  font-size: 12px;
+  line-height: 16px;
+}
