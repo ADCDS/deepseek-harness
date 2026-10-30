@@ -30,6 +30,9 @@ import { ModelSelect } from './ModelSelect.tsx'
 import { en, ja, es, fr, de, ru, pt, zh, type ModelKey } from './locales.ts'
 import { orderModelProviders } from './provider-order.ts'
 
+/** Serving-model face before a Session binding resolves: no reroute, no updates. */
+const EMPTY_SERVING = { subscribe: () => () => { /* nothing to observe */ }, getSnapshot: () => undefined }
+
 export { ModelDirectory } from './directory.ts'
 export type { ModelDirectoryState } from './directory.ts'
 export { ModelDirectoryResolver } from './service.ts'
@@ -178,9 +181,14 @@ export function apply(ctx: ClientContext): void {
       inject: (sessionId): ModelSelectInjected => {
         const directory = models.directoryFor(sessionId)
         const available = sessions.subagentAddress(sessionId) === undefined
+        const binding = sessions.binding(sessionId)
+        const servingModel = (binding === undefined
+          ? EMPTY_SERVING
+          : binding.session.projections.faceOf('modelSelection')) as NonNullable<ModelSelectInjected['servingModel']>
         return {
           available,
           directory: directory.store,
+          servingModel,
           // Loaded for children too: the read-only seat names the child's fixed
           // route from the same advisory catalog the selectable seat renders.
           load: () => {

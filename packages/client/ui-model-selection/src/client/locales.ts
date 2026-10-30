@@ -34,6 +34,9 @@ export const zh = {
   'search.empty': '没有匹配的模型。',
   'empty.models': '暂无可用模型',
   'empty.efforts': '当前模型未提供推理等级。',
+  'serving.detail': '{from} 被拒绝（类别：{category}），改由 {model} 回答',
+  'serving.detailPlain': '{from} 被拒绝，改由 {model} 回答',
+  'serving.aria': '{from} 被拒绝后，当前由 {model} 回答',
 } satisfies Record<string, string>
 
 /** The model namespace key union. */
@@ -65,6 +68,9 @@ export const en = {
   'search.empty': 'No matching models.',
   'empty.models': 'No models available.',
   'empty.efforts': 'This model provides no reasoning effort levels.',
+  'serving.detail': '{from} declined (category: {category}); answered by {model}',
+  'serving.detailPlain': '{from} declined; answered by {model}',
+  'serving.aria': 'Serving {model} after {from} declined',
 } satisfies Record<ModelKey, string>
 
 /** Japanese copy, checked against the English keys. */
@@ -93,6 +99,9 @@ export const ja = {
   'search.empty': '一致するモデルがありません。',
   'empty.models': '利用可能なモデルがありません。',
   'empty.efforts': 'このモデルには推論強度の設定がありません。',
+  'serving.detail': '{from} が拒否されました（カテゴリ：{category}）。{model} が回答しています',
+  'serving.detailPlain': '{from} が拒否されました。{model} が回答しています',
+  'serving.aria': '{from} の拒否後、{model} が回答中',
 } satisfies Record<keyof typeof en, string>
 
 /** Spanish dictionary, checked against the English keys. */
@@ -121,6 +130,9 @@ export const es = {
   'search.empty': 'No hay modelos coincidentes.',
   'empty.models': 'No hay modelos disponibles.',
   'empty.efforts': 'Este modelo no proporciona niveles de esfuerzo de razonamiento.',
+  'serving.detail': '{from} rechazó (categoría: {category}); responde {model}',
+  'serving.detailPlain': '{from} rechazó; responde {model}',
+  'serving.aria': 'Responde {model} tras el rechazo de {from}',
 } satisfies Record<keyof typeof en, string>
 
 /** French dictionary, checked against the English keys. */
@@ -149,6 +161,9 @@ export const fr = {
   'search.empty': 'Aucun modèle correspondant.',
   'empty.models': 'Aucun modèle disponible.',
   'empty.efforts': 'Ce modèle ne fournit aucun niveau d’effort de raisonnement.',
+  'serving.detail': '{from} a refusé (catégorie : {category}) ; {model} répond',
+  'serving.detailPlain': '{from} a refusé ; {model} répond',
+  'serving.aria': '{model} répond après le refus de {from}',
 } satisfies Record<keyof typeof en, string>
 
 /** German dictionary, checked against the English keys. */
@@ -177,6 +192,9 @@ export const de = {
   'search.empty': 'Keine passenden Modelle.',
   'empty.models': 'Keine Modelle verfügbar.',
   'empty.efforts': 'Dieses Modell liefert keine Argumentationsaufwandsstufen.',
+  'serving.detail': '{from} hat abgelehnt (Kategorie: {category}); {model} antwortet',
+  'serving.detailPlain': '{from} hat abgelehnt; {model} antwortet',
+  'serving.aria': '{model} antwortet, nachdem {from} abgelehnt hat',
 } satisfies Record<keyof typeof en, string>
 
 /** Russian dictionary, checked against the English keys. */
@@ -205,6 +223,9 @@ export const ru = {
   'search.empty': 'Нет подходящих моделей.',
   'empty.models': 'Нет доступных моделей.',
   'empty.efforts': 'Эта модель не обеспечивает обоснования уровней усилий.',
+  'serving.detail': '{from} отклонил (категория: {category}); отвечает {model}',
+  'serving.detailPlain': '{from} отклонил; отвечает {model}',
+  'serving.aria': 'Отвечает {model} после отклонения {from}',
 } satisfies Record<keyof typeof en, string>
 
 /** Portuguese dictionary, checked against the English keys. */
@@ -233,4 +254,7 @@ export const pt = {
   'search.empty': 'Não há modelos correspondentes.',
   'empty.models': 'Nenhum modelo disponível.',
   'empty.efforts': 'Este modelo não fornece níveis de esforço de raciocínio.',
+  'serving.detail': '{from} recusou (categoria: {category}); respondido por {model}',
+  'serving.detailPlain': '{from} recusou; respondido por {model}',
+  'serving.aria': 'Respondido por {model} após {from} recusar',
 } satisfies Record<keyof typeof en, string>

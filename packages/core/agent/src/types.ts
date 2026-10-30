@@ -5,7 +5,7 @@
  */
 
 import type { ReasoningEffortId } from '@deepseek-ai/dsh-llm/brand'
-import type { UserMessage } from '@deepseek-ai/dsh-llm/types'
+import type { ServedBy, UserMessage } from '@deepseek-ai/dsh-llm/types'
 // Type-only: the Workspace registry's archive-admission family map this registry merges `turn` into.
 import type {} from '@deepseek-ai/dsh-workspace/types'
 import type { OptionalSessionSeq, SessionId, SessionSeq } from '@deepseek-ai/dsh-session/types'
@@ -91,6 +91,13 @@ export interface ModelSelectionProjection {
   readonly lastUsed: ModelSelection | null
   /** Selection the next model step uses; null while the Agent's initial options supply the route. */
   readonly next: ModelSelection | null
+  /**
+   * The model a provider rerouted the latest reply to, when it differs from
+   * the requested one (Anthropic's server-side refusal fallback); null once a
+   * reply comes back on the requested model. Lets the composer name the model
+   * actually serving the conversation while a fallback is in effect.
+   */
+  readonly lastServed: ServedBy | null
 }
 
 declare module '@deepseek-ai/dsh-session-projection/types' {

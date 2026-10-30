@@ -64,7 +64,7 @@ describe('Agent model ownership', () => {
     expect(second.agent.model.current()).toEqual(INITIAL)
     expect(second.agent.session.snapshotEvents()).toEqual([])
     expect(ctx.sessionProjections.snapshot(first.agent.session).values.modelSelection)
-      .toEqual({ lastUsed: null, next: SELECTED })
+      .toEqual({ lastUsed: null, next: SELECTED, lastServed: null })
   })
 
   it.each(['loop', 'root'] as const)('retains model selection until Agent cleanup finishes on %s disposal', async (owner) => {
@@ -95,7 +95,7 @@ describe('Agent model ownership', () => {
       expect(ctx.sessionProjections.snapshot(handle.agent.session).values.modelSelection).toBeUndefined()
       await ctx.plugin(AgentLoop, { agents: [] })
       expect(ctx.sessionProjections.snapshot(handle.agent.session).values.modelSelection)
-        .toEqual({ lastUsed: null, next: SELECTED })
+        .toEqual({ lastUsed: null, next: SELECTED, lastServed: null })
     }
   })
 })

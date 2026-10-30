@@ -2,7 +2,8 @@
 import type { RemoteResult } from '@deepseek-ai/dsh-typert-protocol'
 import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ModelCatalogModel, ModelProviderGroup } from '@deepseek-ai/dsh-api-session-controller/types'
-import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { ObservableSnapshot, SnapshotStore } from '@deepseek-ai/dsh-client-store'
+import type { ServedBy } from '@deepseek-ai/dsh-llm/types'
 import type { ModelDirectoryState } from './directory.ts'
 
 /** Catalog data for a model name inside the composer's existing controls. */
@@ -49,6 +50,15 @@ export interface ModelSelectInjected {
   available: boolean
   /** The session's shared directory store (same instance the /model popup reads). */
   directory: SnapshotStore<ModelDirectoryState>
+  /**
+   * Live model-selection projection face. Its `lastServed` names the model a
+   * provider rerouted the latest reply to (a server-side fallback); the seat
+   * shows it beside the trigger so the reader sees which model is answering
+   * while the requested one stays selected. The face's snapshot is undefined
+   * until it resolves; the prop itself is optional, and an absent one shows no
+   * badge (a seat mounted without a resolvable Session binding).
+   */
+  servingModel?: ObservableSnapshot<{ readonly lastServed: ServedBy | null } | undefined>
   /** Ensure the shared advisory catalog is loaded (errors land on the store). */
   load: () => void
   /**

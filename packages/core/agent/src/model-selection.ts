@@ -5,6 +5,8 @@ import type { Context } from '@deepseek-ai/cordis'
 import type { Model, AgentOptions, PreStepDecision } from './runtime-types.ts'
 import type { ModelSelection } from './types.ts'
 import { boundContextSummary, createUserMessage, type ContextFormed } from '@deepseek-ai/dsh-llm'
+import { assistantStreamServedBy } from '@deepseek-ai/dsh-llm/assistant-stream'
+import type { ServedBy } from '@deepseek-ai/dsh-llm/types'
 import { ReasoningEffortId } from '@deepseek-ai/dsh-llm/brand'
 import type { Session, EpochHeader } from '@deepseek-ai/dsh-session'
 import type { ProjectionDefinition } from '@deepseek-ai/dsh-session-projection'
@@ -20,6 +22,13 @@ export interface ModelSelectionProjectionState {
   readonly lastUsed: ModelSelection | null
   /** Later recorded selection not yet used by a matching model request. */
   readonly pending: ModelSelection | null
+  /**
+   * The reroute the latest assistant reply reported (a server-side fallback to
+   * another model), or null when that reply came back on the requested model.
+   * Tracks the most recent reply only, so it clears as soon as routing returns
+   * to the requested model.
+   */
+  readonly lastServed: ServedBy | null
 }
 
 /**
@@ -65,27 +74,55 @@ const selectionSchema = z.object({
   reasoningEffort: z.string().min(1).transform(ReasoningEffortId).exactOptional(),
 }).nullable()
 
+const servedBySchema = z.object({
+  model: z.string().min(1),
+  reason: z.string().min(1).exactOptional(),
+  from: z.string().min(1).exactOptional(),
+  category: z.string().min(1).exactOptional(),
+}).nullable()
+
+/**
+ * Compare two reported reroutes, treating absent fields as their own value.
+ * @param left - first reroute, or no reroute.
+ * @param right - second reroute, or no reroute.
+ * @returns whether both agree.
+ */
+function sameServed(left: ServedBy | null, right: ServedBy | null): boolean {
+  return left === right || (left !== null && right !== null
+    && left.model === right.model && left.from === right.from
+    && left.category === right.category && left.reason === right.reason)
+}
+
 /**
  * Session selection fold: recorded selections become
  * the pending choice, and each request header retires a matching one.
  */
 export const modelSelectionProjectionDefinition: Required<ProjectionDefinition<'modelSelection', ModelSelectionProjectionState>> = {
   key: 'modelSelection',
-  stateVersion: 3,
-  stateSchema: z.object({ lastUsed: selectionSchema, pending: selectionSchema }),
-  init: () => ({ lastUsed: null, pending: null }),
+  stateVersion: 4,
+  stateSchema: z.object({ lastUsed: selectionSchema, pending: selectionSchema, lastServed: servedBySchema }),
+  init: () => ({ lastUsed: null, pending: null, lastServed: null }),
   apply: (state, event) => {
+    if (event.type === 'assistant/message') {
+      // Track the latest reply only: a reroute reported on this reply's finish
+      // sets the serving model; a reply on the requested model clears it.
+      const served = assistantStreamServedBy(event.data.stream)
+      const lastServed = served !== undefined && served.from !== undefined ? served : null
+      return sameServed(state.lastServed, lastServed) ? state : { ...state, lastServed }
+    }
     if (event.type === 'model/selection') {
       return sameModelSelection(state.pending, event.data) ? state : { ...state, pending: event.data }
     }
     if (event.type !== 'request/header') return state
     const lastUsed = selectionOfHeader(event.data.header)
     const pending = sameModelSelection(state.pending, lastUsed) ? null : state.pending
-    return sameModelSelection(state.lastUsed, lastUsed) && pending === state.pending ? state : { lastUsed, pending }
+    return sameModelSelection(state.lastUsed, lastUsed) && pending === state.pending
+      ? state
+      : { ...state, lastUsed, pending }
   },
   wire: {
-    viewSchema: z.object({ lastUsed: selectionSchema, next: selectionSchema }),
-    view: state => ({ lastUsed: state.lastUsed, next: state.pending ?? state.lastUsed }),
+    viewSchema: z.object({ lastUsed: selectionSchema, next: selectionSchema, lastServed: servedBySchema }),
+    view: state => ({ lastUsed: state.lastUsed, next: state.pending ?? state.lastUsed, lastServed: state.lastServed }),
   },
 }
 

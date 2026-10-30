@@ -172,7 +172,7 @@ describe('SessionController facade', () => {
       reason: 'initial',
     })
     expect(ctx.sessionProjections.snapshot(session).values.modelSelection).toEqual({
-      lastUsed: { provider: 'fixture', model: 'fixture-model' }, next: { provider: 'fixture', model: 'fixture-model' },
+      lastUsed: { provider: 'fixture', model: 'fixture-model' }, next: { provider: 'fixture', model: 'fixture-model' }, lastServed: null,
     })
     const unowned = ctx.sessions.create(SessionId('controller-unowned'), {
       meta: { cwd: '/workspace' },
@@ -182,7 +182,7 @@ describe('SessionController facade', () => {
       reason: 'initial',
     })
     expect(ctx.sessionProjections.snapshot(unowned).values.modelSelection).toEqual({
-      lastUsed: { provider: 'fixture', model: 'other-model' }, next: { provider: 'fixture', model: 'other-model' },
+      lastUsed: { provider: 'fixture', model: 'other-model' }, next: { provider: 'fixture', model: 'other-model' }, lastServed: null,
     })
 
     const abort = new AbortController()

@@ -1271,6 +1271,6 @@ it('shows external membership without an execution status or child Session navig
 
 it('reports the recorded route in a read-only child composer', () => {
   render(<SubagentReadOnlyComposer matched={{ reason: 'one-shot' }} t={t}
-    useProjection={() => ({ lastUsed: { provider: 'claude', model: 'child-model' }, next: null })} />)
+    useProjection={() => ({ lastUsed: { provider: 'claude', model: 'child-model' }, next: null, lastServed: null })} />)
   expect(screen.getByRole('status').textContent).toContain('claude/child-model')
 })

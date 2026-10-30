@@ -7,6 +7,7 @@ import { SessionId } from '@deepseek-ai/dsh-session/types'
 import type { ModelSelection } from '@deepseek-ai/dsh-api-remotes/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
 import type { ComponentProps } from 'react'
+import type { ServedBy } from '@deepseek-ai/dsh-llm/types'
 import type { ModelDirectoryState } from '../src/client/directory.ts'
 import { ModelSelect } from '../src/client/ModelSelect.tsx'
 import { en, zh } from '../src/client/locales.ts'
@@ -201,6 +202,48 @@ describe('ModelSelect catalog badges', () => {
     } })
     expect(screen.getByRole('button', { name: '选择模型，当前 DeepSeek-V4.1-Flash' }).textContent).toBe('DeepSeek-V4.1-Flash [info]')
     expect(screen.queryByText('新')).toBeNull()
+  })
+})
+
+describe('ModelSelect fallback badge', () => {
+  const anthropic = (current: string): ModelDirectoryState => state({
+    current: { provider: 'anthropic', model: current },
+    groups: [{
+      id: 'anthropic',
+      name: 'Anthropic',
+      models: [
+        { id: 'claude-opus-5-5', name: 'Opus 5.5', reasoning },
+        { id: 'claude-opus-4-8', name: 'Opus 4.8', reasoning },
+      ],
+    }],
+  })
+  const servingStore = (lastServed: ServedBy | null) =>
+    createSnapshotStore<{ readonly lastServed: ServedBy | null } | undefined>({ lastServed })
+  const props = (lastServed: ServedBy | null) => ({
+    renderSlot: renderLabel, locked: false, available: true,
+    directory: createSnapshotStore(anthropic('claude-opus-5-5')),
+    servingModel: servingStore(lastServed),
+    load: vi.fn(), resolveText, select: vi.fn(), t,
+  })
+
+  it('names the serving model beside the picker after a reroute, by its catalog name', () => {
+    render(<ModelSelect {...props({ model: 'claude-opus-4-8', from: 'claude-opus-5-5', reason: 'refusal-fallback', category: 'cyber' })} />)
+    expect(screen.getByText('→ Opus 4.8')).toBeTruthy()
+    // The picker still shows the requested model, unchanged.
+    expect(screen.getByRole('button', { name: /Opus 5\.5/ })).toBeTruthy()
+  })
+
+  it('shows no fallback badge when the latest reply used the requested model', () => {
+    render(<ModelSelect {...props(null)} />)
+    expect(screen.queryByText(/→/)).toBeNull()
+  })
+
+  it('shows no badge once the selection has caught up to the serving model', () => {
+    render(<ModelSelect {...{
+      ...props({ model: 'claude-opus-4-8', from: 'claude-opus-5-5', reason: 'refusal-fallback' }),
+      directory: createSnapshotStore(anthropic('claude-opus-4-8')),
+    }} />)
+    expect(screen.queryByText(/→/)).toBeNull()
   })
 })
 

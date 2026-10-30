@@ -102,7 +102,7 @@ async function bench(locale: 'zh' | 'en' = 'zh') {
           ? {}
           : { reasoningEffort: ReasoningEffortId(payload.reasoningEffort) },
       }
-      projections.get(payload.sessionId)?.set({ lastUsed: null, next: selected })
+      projections.get(payload.sessionId)?.set({ lastUsed: null, next: selected, lastServed: null })
       return Promise.resolve({ ok: true as const, value: { selected } })
     },
   }
@@ -167,6 +167,7 @@ async function bench(locale: 'zh' | 'en' = 'zh') {
     const projection = createSnapshotStore<ModelSelectionProjection | undefined>({
       lastUsed: null,
       next: null,
+      lastServed: null,
     })
     projections.set(id, projection)
     const binding = {
@@ -424,6 +425,7 @@ describe('ui-model-selection dual entry', () => {
     b.setProjected(sid('s1'), {
       lastUsed: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
       next: { provider: 'deepseek-official', model: 'deepseek-v4-pro' },
+      lastServed: null,
     })
     expect(face.directory.getSnapshot()).toMatchObject({
       current: { provider: 'deepseek-official', model: 'deepseek-v4-flash' },
@@ -481,7 +483,7 @@ describe('ui-model-selection dual entry', () => {
       b.mint('existing')
       const existing = b.ctx.modelDirectories.directoryFor(sid('existing'))
       await existing.load()
-      b.setProjected(sid('existing'), { lastUsed: null,
+      b.setProjected(sid('existing'), { lastUsed: null, lastServed: null,
         next: { provider: 'deepseek-official', model: 'deepseek-v4-flash', reasoningEffort: ReasoningEffortId('high') } })
       b.setRoutable(false)
       b.remote.emit('settings/document-updated', ['llm-deepseek', 1])
@@ -530,7 +532,7 @@ describe('ui-model-selection dual entry', () => {
     b.mint('s1')
     const face = b.seat().inject!(sid('s1'))
     const intended = { provider: 'deepseek-official', model: 'unlisted' }
-    b.setProjected(sid('s1'), { lastUsed: intended, next: intended })
+    b.setProjected(sid('s1'), { lastUsed: intended, next: intended, lastServed: null })
     await vi.waitFor(() => { expect(face.directory.getSnapshot().status).toBe('ready') })
     expect(face.directory.getSnapshot().current).toEqual(intended)
     expect(b.blockOf('s1')).toBeUndefined()
@@ -598,7 +600,7 @@ it('displays a child last-used route independently of host defaults and catalog 
     await directory.load()
     expect(directory.store.getSnapshot().current).toBeNull()
     const used = { provider: 'external', model: 'unlisted-child' }
-    b.setProjected(sid('child-route'), { lastUsed: used, next: { provider: 'deepseek-official', model: 'deepseek-v4-flash' } })
+    b.setProjected(sid('child-route'), { lastUsed: used, next: { provider: 'deepseek-official', model: 'deepseek-v4-flash' }, lastServed: null })
     expect(directory.store.getSnapshot().current).toEqual(used)
     b.setCatalogFailure(true)
     await directory.load()
