@@ -47,6 +47,7 @@ export const zh = {
   'readonly.oneShot.body': '一次性任务不支持后续消息，可在这里查看完整执行记录。',
   'readonly.body': '父会话当前不在线，重新打开父会话后即可继续发送消息。',
   'readonly.route': '模型：{model}',
+  'readonly.servedBy': '{from} 被拒绝后由 {model} 回答',
 } as const
 
 /** English dictionary, key-identical to the Chinese source of truth. */
@@ -93,6 +94,7 @@ export const en: Record<SubagentKey, string> = {
   'readonly.oneShot.body': 'One-shot tasks do not accept follow-ups; review the full execution record here.',
   'readonly.body': 'The parent session is offline; reopen it to continue sending messages.',
   'readonly.route': 'Model: {model}',
+  'readonly.servedBy': 'Answered by {model} after {from} declined',
 }
 
 /** Key domain of the `subagent` namespace (zh is the source of truth). */
@@ -142,6 +144,7 @@ export const ja = {
   'readonly.oneShot.body': '単発タスクは追加のメッセージを受け付けません。ここで実行記録の全体を確認できます。',
   'readonly.body': '親セッションがオフラインです。再度開いてメッセージの送信を続けてください。',
   'readonly.route': 'モデル：{model}',
+  'readonly.servedBy': '{from} の拒否後、{model} が回答',
 } satisfies Record<keyof typeof en, string>
 
 /** Spanish dictionary, checked against the English keys. */
@@ -188,6 +191,7 @@ export const es = {
   'readonly.oneShot.body': 'Las tareas únicas no aceptan seguimientos; revise el registro de ejecución completo aquí.',
   'readonly.body': 'La sesión para padres está fuera de línea; Vuelva a abrirlo para continuar enviando mensajes.',
   'readonly.route': 'Modelo: {model}',
+  'readonly.servedBy': 'Respondido por {model} tras el rechazo de {from}',
 } satisfies Record<keyof typeof en, string>
 
 /** French dictionary, checked against the English keys. */
@@ -234,6 +238,7 @@ export const fr = {
   'readonly.oneShot.body': 'Les tâches ponctuelles n’acceptent pas de messages de suivi ; consultez leur journal d’exécution complet ici.',
   'readonly.body': 'La session parente est hors ligne ; rouvrez-la pour continuer à envoyer des messages.',
   'readonly.route': 'Modèle : {model}',
+  'readonly.servedBy': '{model} a répondu après le refus de {from}',
 } satisfies Record<keyof typeof en, string>
 
 /** German dictionary, checked against the English keys. */
@@ -280,6 +285,7 @@ export const de = {
   'readonly.oneShot.body': 'Einmalige Aufgaben akzeptieren keine Folgeaufgaben; Sehen Sie sich hier den vollständigen Ausführungsbericht an.',
   'readonly.body': 'Die übergeordnete Sitzung ist offline. Öffnen Sie es erneut, um weiterhin Nachrichten zu senden.',
   'readonly.route': 'Modell: {model}',
+  'readonly.servedBy': '{model} hat geantwortet, nachdem {from} abgelehnt hat',
 } satisfies Record<keyof typeof en, string>
 
 /** Russian dictionary, checked against the English keys. */
@@ -326,6 +332,7 @@ export const ru = {
   'readonly.oneShot.body': 'Одноразовые задачи не допускают последующих действий; просмотреть полную запись выполнения можно здесь.',
   'readonly.body': 'Родительский сеанс находится в автономном режиме; откройте его повторно, чтобы продолжить отправку сообщений.',
   'readonly.route': 'Модель: {model}',
+  'readonly.servedBy': 'Ответил {model} после отклонения {from}',
 } satisfies Record<keyof typeof en, string>
 
 /** Portuguese dictionary, checked against the English keys. */
@@ -372,4 +379,5 @@ export const pt = {
   'readonly.oneShot.body': 'Tarefas únicas não aceitam acompanhamentos; revise o registro completo da execução aqui.',
   'readonly.body': 'A sessão pai está offline; reabra-o para continuar enviando mensagens.',
   'readonly.route': 'Modelo: {model}',
+  'readonly.servedBy': 'Respondido por {model} após {from} recusar',
 } satisfies Record<keyof typeof en, string>

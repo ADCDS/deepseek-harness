@@ -18,3 +18,26 @@ export function routeLabel(
   const used = selection?.lastUsed
   return used == null ? undefined : `${used.provider}/${used.model}`
 }
+
+/** A reroute a child's latest reply reported: the model that answered and the one it replaced. */
+export interface SubagentServingRoute {
+  /** The model that produced the latest reply. */
+  model: string
+  /** The requested model a provider declined before rerouting. */
+  from: string
+}
+
+/**
+ * The server-side fallback a child's latest reply reported, so a reader of a
+ * read-only child conversation sees which model actually answered when it
+ * differs from the fixed route. Absent until a reply reports a reroute, and
+ * cleared once a reply returns on the requested model.
+ * @param selection - the session's durable model-selection projection.
+ * @returns the serving and declined models, or undefined when no reroute stands.
+ */
+export function servingRoute(
+  selection: SessionProjectionMap['modelSelection'] | undefined,
+): SubagentServingRoute | undefined {
+  const served = selection?.lastServed
+  return served == null || served.from === undefined ? undefined : { model: served.model, from: served.from }
+}

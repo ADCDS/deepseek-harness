@@ -1274,3 +1274,15 @@ it('reports the recorded route in a read-only child composer', () => {
     useProjection={() => ({ lastUsed: { provider: 'claude', model: 'child-model' }, next: null, lastServed: null })} />)
   expect(screen.getByRole('status').textContent).toContain('claude/child-model')
 })
+
+it('names the serving model in a read-only child composer after a reroute', () => {
+  render(<SubagentReadOnlyComposer matched={{ reason: 'one-shot' }} t={t}
+    useProjection={() => ({
+      lastUsed: { provider: 'claude', model: 'claude-opus-5-5' },
+      next: null,
+      lastServed: { model: 'claude-opus-4-8', from: 'claude-opus-5-5', reason: 'refusal-fallback' },
+    })} />)
+  const text = screen.getByRole('status').textContent
+  expect(text).toContain('claude/claude-opus-5-5')
+  expect(text).toContain('claude-opus-4-8')
+})

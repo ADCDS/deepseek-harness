@@ -1,6 +1,6 @@
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { NS } from './locales.ts'
-import { routeLabel } from './subagent-route.ts'
+import { routeLabel, servingRoute } from './subagent-route.ts'
 import css from './SubagentReadOnlyComposer.module.css'
 
 /** Why a catalog-addressed conversation cannot accept human input. */
@@ -21,7 +21,9 @@ export function SubagentReadOnlyComposer({
   matched, useProjection, t,
 }: Pick<SubagentReadOnlyComposerProps, 'matched' | 'useProjection' | 't'>) {
   const oneShot = matched.reason === 'one-shot'
-  const route = routeLabel(useProjection('modelSelection'))
+  const selection = useProjection('modelSelection')
+  const route = routeLabel(selection)
+  const serving = servingRoute(selection)
   return (
     <div className={css.frame} role="status">
       <strong>{t(oneShot ? 'readonly.oneShot.title' : 'readonly.title')}</strong>
@@ -29,6 +31,9 @@ export function SubagentReadOnlyComposer({
         {t(matched.reason === 'unknown' ? 'readonly.unknown.body' : oneShot ? 'readonly.oneShot.body' : 'readonly.body')}
       </span>
       {route !== undefined && <span className={css.route}>{t('readonly.route', { model: route })}</span>}
+      {serving !== undefined && (
+        <span className={css.servedBy}>{t('readonly.servedBy', { model: serving.model, from: serving.from })}</span>
+      )}
     </div>
   )
 }

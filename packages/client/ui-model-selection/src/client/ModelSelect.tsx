@@ -160,6 +160,19 @@ export function ModelSelect(
       category: servedReroute.category,
     }
     : undefined
+  // One badge element, rendered in both the selectable trigger and the
+  // read-only subagent seat: a rerouted reply is worth naming either way.
+  const servingBadgeEl = servingBadge === undefined ? null : (
+    <span
+      className={css.servingBadge}
+      title={servingBadge.category === undefined
+        ? t('serving.detailPlain', { from: servingBadge.from, model: servingBadge.model })
+        : t('serving.detail', { from: servingBadge.from, model: servingBadge.model, category: servingBadge.category })}
+      aria-label={t('serving.aria', { from: servingBadge.from, model: servingBadge.model })}
+    >
+      <Tag tone="warning">{`→ ${servingBadge.model}`}</Tag>
+    </span>
+  )
   const effortChoices = useMemo<readonly EffortChoice[]>(() => reasoning === undefined
     ? []
     : [
@@ -490,6 +503,7 @@ export function ModelSelect(
           <span className={css.triggerLabel}>{fixedRoute}</span>
           {effortLabel !== undefined && <span className={css.triggerEffort}>{effortLabel}</span>}
         </button>
+        {servingBadgeEl}
       </div>
     )
   }
@@ -561,17 +575,7 @@ export function ModelSelect(
           : <IconChevronDownOutlineRegular className={clsx(css.chevron, open && css.chevronOpen)} />}
       </button>
 
-      {servingBadge !== undefined && (
-        <span
-          className={css.servingBadge}
-          title={servingBadge.category === undefined
-            ? t('serving.detailPlain', { from: servingBadge.from, model: servingBadge.model })
-            : t('serving.detail', { from: servingBadge.from, model: servingBadge.model, category: servingBadge.category })}
-          aria-label={t('serving.aria', { from: servingBadge.from, model: servingBadge.model })}
-        >
-          <Tag tone="warning">{`→ ${servingBadge.model}`}</Tag>
-        </span>
-      )}
+      {servingBadgeEl}
 
       {/* Portaled to body (Menu primitive's portal mode) so the sidebar and
           column overflow clips cannot crop the card; synthetic events still

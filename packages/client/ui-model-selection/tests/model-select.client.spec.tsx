@@ -245,6 +245,16 @@ describe('ModelSelect fallback badge', () => {
     }} />)
     expect(screen.queryByText(/→/)).toBeNull()
   })
+
+  it('names the serving model on the read-only subagent seat too', () => {
+    render(<ModelSelect {...{
+      ...props({ model: 'claude-opus-4-8', from: 'claude-opus-5-5', reason: 'refusal-fallback', category: 'cyber' }),
+      available: false,
+    }} />)
+    // The read-only seat still names the fixed route, with the reroute beside it.
+    expect(screen.getByText('Anthropic/Opus 5.5')).toBeTruthy()
+    expect(screen.getByText('→ Opus 4.8')).toBeTruthy()
+  })
 })
 
 describe('ModelSelect reasoning effort', () => {
