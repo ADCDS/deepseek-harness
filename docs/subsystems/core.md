@@ -263,6 +263,13 @@ interface ModelSelectionProjectionState {
   readonly lastUsed: ModelSelection | null
   /** Later recorded selection not yet used by a matching model request. */
   readonly pending: ModelSelection | null
+  /**
+   * The reroute the latest assistant reply reported (a server-side fallback to
+   * another model), or null when that reply came back on the requested model.
+   * Tracks the most recent reply only, so it clears as soon as routing returns
+   * to the requested model.
+   */
+  readonly lastServed: ServedBy | null
 }
 ```
 
@@ -273,6 +280,13 @@ interface ModelSelectionProjection {
   readonly lastUsed: ModelSelection | null
   /** Selection the next model step uses; null while the Agent's initial options supply the route. */
   readonly next: ModelSelection | null
+  /**
+   * The model a provider rerouted the latest reply to, when it differs from
+   * the requested one (Anthropic's server-side refusal fallback); null once a
+   * reply comes back on the requested model. Lets the composer name the model
+   * actually serving the conversation while a fallback is in effect.
+   */
+  readonly lastServed: ServedBy | null
 }
 ```
 

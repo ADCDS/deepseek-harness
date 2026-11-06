@@ -481,10 +481,18 @@ interface ToolOutputMap {
   subagent: {
     kind: "activation";
     name: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   };
   subagent_fork: {
     kind: "activation";
     name: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   };
   template_echo: string;
   todo_write: {

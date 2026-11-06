@@ -756,7 +756,7 @@ describe('dsh-tool-subagent local activation', () => {
     expect(text(started)).toBe('started subagent agent-1')
     const childId = ctx.sessionProjections.snapshot(parent.session).values.subagentCatalog?.find(entry => entry.mode === 'continuable' && entry.name === 'agent-1')?.id
     expect(childId).toBeDefined()
-    expect(started.isError ? undefined : started.value).toEqual({ kind: 'activation', name: 'agent-1' })
+    expect(started.isError ? undefined : started.value).toEqual({ kind: 'activation', name: 'agent-1', route: { provider: 'mock', model: 'mock' } })
     // No Task was created for the continuable child.
 
     await vi.waitFor(() => {

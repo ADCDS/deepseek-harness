@@ -277,7 +277,11 @@ export async function apply(ctx: Context, config: Config): Promise<void> {
           },
         },
         render: (_args, value) => [{ type: 'text', text: `started subagent ${value.name}` }],
-        presentationMeta: (_args, value) => ({ kind: value.kind, name: value.name, ...value.route === undefined ? {} : { route: value.route } }),
+        presentationMeta: (_args, value) => ({
+          kind: value.kind,
+          name: value.name,
+          ...value.route === undefined ? {} : { route: value.route },
+        }),
       },
       isConcurrencySafe: () => true,
       async execute(args, exec) {

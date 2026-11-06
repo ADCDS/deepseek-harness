@@ -387,9 +387,14 @@ class SubagentArgs(TypedDict):
     prompt: str
     # Additional keys beyond those declared are allowed.
 
+class SubagentOutputRoute(TypedDict):
+    provider: str
+    model: str
+
 class SubagentOutput(TypedDict):
     kind: Literal["activation"]
     name: str
+    route: NotRequired[SubagentOutputRoute]
 
 class SubagentForkArgs(TypedDict):
     # Initial child working directory. Relative paths use your current directory; omitted inherits it. Later directory changes in either agent are independent.
@@ -402,9 +407,14 @@ class SubagentForkArgs(TypedDict):
     prompt: str
     # Additional keys beyond those declared are allowed.
 
+class SubagentForkOutputRoute(TypedDict):
+    provider: str
+    model: str
+
 class SubagentForkOutput(TypedDict):
     kind: Literal["activation"]
     name: str
+    route: NotRequired[SubagentForkOutputRoute]
 
 class TodoWriteArgsTodos(TypedDict):
     # What the task is — a short imperative line.

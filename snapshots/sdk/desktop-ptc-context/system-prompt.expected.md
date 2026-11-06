@@ -1531,10 +1531,18 @@ interface ToolOutputMap {
   subagent: {
     kind: "activation";
     name: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   };
   subagent_fork: {
     kind: "activation";
     name: string;
+    route?: {
+      provider: string;
+      model: string;
+    };
   };
   todo_write: {
     todos: ({

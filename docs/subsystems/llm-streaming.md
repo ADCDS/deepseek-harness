@@ -212,6 +212,8 @@ type StreamChunk =
     reason: FinishReason
     /** Replay metadata for a successful response; see {@link ReplayEnvelope}. */
     replayState?: ReplayEnvelope
+    /** Set when another model than the requested one answered; see {@link ServedBy}. */
+    servedBy?: ServedBy
   }
 ```
 
